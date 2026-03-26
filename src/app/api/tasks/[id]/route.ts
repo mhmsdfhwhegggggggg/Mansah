@@ -2,6 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { logger } from '@/lib/logger'
+import { z } from 'zod'
+
+const taskUpdateSchema = z.object({
+  status: z.enum(['PENDING', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'FAILED']).optional(),
+  result: z.union([z.string(), z.record(z.unknown())]).optional(),
+  purchaseConfirmation: z.string().optional(),
+  trackingNumber: z.string().optional(),
+  agentId: z.string().optional(),
+})
 
 export async function PUT(
   request: NextRequest,
@@ -14,7 +24,28 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { status, result, purchaseConfirmation, trackingNumber, agentId } = body
+    const parsed = taskUpdateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'بيانات غير صالحة' },
+        { status: 400 }
+      )
+    }
+    const { status, result, purchaseConfirmation, trackingNumber, agentId } = parsed.data
+
+    // AGENT can only update tasks assigned to them
+    if (session.user.role === 'AGENT') {
+      const existingTask = await prisma.task.findUnique({
+        where: { id: params.id },
+        select: { agentId: true },
+      })
+      if (!existingTask || existingTask.agentId !== session.user.id) {
+        return NextResponse.json(
+          { error: 'غير مصرح - هذه المهمة غير مسندة إليك' },
+          { status: 403 }
+        )
+      }
+    }
 
     const updateData: Record<string, unknown> = {}
     if (status) updateData.status = status
@@ -78,7 +109,7 @@ export async function PUT(
 
     return NextResponse.json({ task })
   } catch (error) {
-    if (process.env.NODE_ENV !== 'production') console.error('Task update error:', error)
+    logger.error('Task update error', error, 'tasks/[id]')
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }

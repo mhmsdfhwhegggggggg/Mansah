@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 import { generateOrderNumber } from '@/lib/utils'
+import { orderCreateSchema } from '@/lib/validations'
+import { checkRateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,7 +51,7 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (error) {
-    if (process.env.NODE_ENV !== 'production') console.error('Orders fetch error:', error)
+    logger.error('Orders fetch error', error, 'orders')
     return NextResponse.json({ error: 'حدث خطأ أثناء جلب الطلبات' }, { status: 500 })
   }
 }
@@ -60,15 +63,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
     }
 
+    // Rate limit: 10 requests per minute
+    const ip = getClientIp(request)
+    const rateLimitResult = checkRateLimit(`orderCreate:${ip}`, RATE_LIMITS.orderCreate)
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'عدد كبير من المحاولات. يرجى المحاولة لاحقاً' },
+        { status: 429 }
+      )
+    }
+
     const body = await request.json()
+    const parsed = orderCreateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'بيانات غير صالحة' },
+        { status: 400 }
+      )
+    }
     const {
       items, shippingAddress, shippingCity, shippingCountry,
       shippingPhone, currency, exchangeRate, notes
-    } = body
-
-    if (!items || items.length === 0) {
-      return NextResponse.json({ error: 'السلة فارغة' }, { status: 400 })
-    }
+    } = parsed.data
 
     const commissionRate = parseFloat(process.env.NEXT_PUBLIC_COMMISSION_RATE || '0.05')
 
@@ -131,7 +147,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ order }, { status: 201 })
   } catch (error) {
-    if (process.env.NODE_ENV !== 'production') console.error('Order create error:', error)
+    logger.error('Order create error', error, 'orders')
     return NextResponse.json({ error: 'حدث خطأ أثناء إنشاء الطلب' }, { status: 500 })
   }
 }

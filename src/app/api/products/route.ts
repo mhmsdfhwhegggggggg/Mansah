@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 export async function GET(request: NextRequest) {
   try {
@@ -72,7 +73,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    if (process.env.NODE_ENV !== 'production') console.error('Products fetch error:', error)
+    logger.error('Products fetch error', error, 'products')
     return NextResponse.json(
       { error: 'حدث خطأ أثناء جلب المنتجات' },
       { status: 500 }
@@ -125,7 +126,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ product }, { status: 201 })
   } catch (error) {
-    if (process.env.NODE_ENV !== 'production') console.error('Product create error:', error)
+    logger.error('Product create error', error, 'products')
     return NextResponse.json(
       { error: 'حدث خطأ أثناء إنشاء المنتج' },
       { status: 500 }

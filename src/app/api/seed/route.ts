@@ -1,11 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import prisma from '@/lib/prisma'
+import { checkRateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   // Block in production
   if (process.env.NODE_ENV === 'production') {
     return NextResponse.json({ error: 'غير متاح في بيئة الإنتاج' }, { status: 403 })
+  }
+
+  // Rate limit: 3 requests per minute
+  const ip = getClientIp(request)
+  const rateLimitResult = checkRateLimit(`seed:${ip}`, RATE_LIMITS.seed)
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { error: 'عدد كبير من المحاولات. يرجى المحاولة لاحقاً' },
+      { status: 429 }
+    )
   }
 
   // Always require seed secret key
@@ -19,8 +31,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Create admin user
-    const adminPassword = await bcrypt.hash('Admin@Mansah2024!', 12)
+    // Create admin user - passwords from environment variables
+    const adminPass = process.env.SEED_ADMIN_PASSWORD || 'Admin@Mansah2024!'
+    const agentPass = process.env.SEED_AGENT_PASSWORD || 'Agent@Mansah2024!'
+    const customerPass = process.env.SEED_CUSTOMER_PASSWORD || 'Customer@Mansah2024!'
+
+    const adminPassword = await bcrypt.hash(adminPass, 12)
     const admin = await prisma.user.upsert({
       where: { email: 'admin@mansah.com' },
       update: {},
@@ -36,7 +52,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Create agent user
-    const agentPassword = await bcrypt.hash('Agent@Mansah2024!', 12)
+    const agentPassword = await bcrypt.hash(agentPass, 12)
     const agent = await prisma.user.upsert({
       where: { email: 'agent@mansah.com' },
       update: {},
@@ -52,7 +68,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Create test customer
-    const customerPassword = await bcrypt.hash('Customer@Mansah2024!', 12)
+    const customerPassword = await bcrypt.hash(customerPass, 12)
     const customer = await prisma.user.upsert({
       where: { email: 'customer@test.com' },
       update: {},
@@ -299,7 +315,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    if (process.env.NODE_ENV !== 'production') console.error('Seed error:', error)
+    logger.error('Seed error', error, 'seed')
     return NextResponse.json({ error: 'حدث خطأ أثناء تهيئة البيانات' }, { status: 500 })
   }
 }

@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 import { categoryCreateSchema } from '@/lib/validations'
+import { logger } from '@/lib/logger'
 
 export async function GET() {
   try {
@@ -17,7 +18,7 @@ export async function GET() {
 
     return NextResponse.json({ categories })
   } catch (error) {
-    if (process.env.NODE_ENV !== 'production') console.error('Categories fetch error:', error)
+    logger.error('Categories fetch error', error, 'categories')
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ category }, { status: 201 })
   } catch (error) {
-    if (process.env.NODE_ENV !== 'production') console.error('Category create error:', error)
+    logger.error('Category create error', error, 'categories')
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }
