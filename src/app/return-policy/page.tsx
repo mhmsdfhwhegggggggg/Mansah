@@ -1,5 +1,11 @@
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'سياسة الإرجاع | منصة',
+  description: 'سياسة إرجاع المنتجات واسترداد المبالغ في منصة',
+}
 
 export default function ReturnPolicyPage() {
   return (

@@ -1,6 +1,12 @@
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { Search, CreditCard, Package, Truck } from 'lucide-react'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'كيف نعمل | منصة',
+  description: 'تعرف على كيفية الشراء من المتاجر العالمية عبر منصة في 4 خطوات بسيطة',
+}
 
 export default function HowItWorksPage() {
   const steps = [

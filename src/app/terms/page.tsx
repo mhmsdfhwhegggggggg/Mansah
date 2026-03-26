@@ -1,5 +1,11 @@
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'شروط الاستخدام | منصة',
+  description: 'شروط وأحكام استخدام منصة للتسوق من المتاجر العالمية',
+}
 
 export default function TermsPage() {
   return (

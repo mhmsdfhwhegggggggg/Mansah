@@ -1,5 +1,11 @@
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'الأسئلة الشائعة | منصة',
+  description: 'إجابات على الأسئلة الأكثر شيوعاً حول خدمات منصة للتسوق من المتاجر العالمية',
+}
 
 export default function FAQPage() {
   return (

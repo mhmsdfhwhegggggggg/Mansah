@@ -1,5 +1,11 @@
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'سياسة الخصوصية | منصة',
+  description: 'سياسة الخصوصية وحماية البيانات في منصة للتسوق الإلكتروني',
+}
 
 export default function PrivacyPage() {
   return (
