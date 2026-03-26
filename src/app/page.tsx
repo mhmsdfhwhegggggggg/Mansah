@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { ShoppingBag, Shield, Truck, CreditCard, Globe, Headphones, ArrowLeft, Star, ChevronLeft } from 'lucide-react'
@@ -159,7 +160,7 @@ export default function HomePage() {
                   <Link key={product.id} href={`/products/${product.id}`} className="group card hover:shadow-xl transition-all duration-300">
                     <div className="aspect-square bg-gray-100 relative overflow-hidden">
                       {images[0] && (
-                        <img src={images[0]} alt={product.titleAr || product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <Image src={images[0]} alt={product.titleAr || product.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 768px) 100vw, 33vw" />
                       )}
                       <div className="absolute top-3 right-3">
                         <span className={`px-2 py-1 rounded-lg text-xs font-bold text-white ${

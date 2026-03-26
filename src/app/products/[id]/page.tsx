@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { ShoppingCart, Star, ExternalLink, Minus, Plus, Shield, Truck, ArrowRight, Package } from 'lucide-react'
@@ -106,7 +107,7 @@ export default function ProductDetailPage() {
             <div className="card overflow-hidden mb-4">
               <div className="aspect-square bg-gray-100">
                 {images[selectedImage] ? (
-                  <img src={images[selectedImage]} alt={product.titleAr || product.title} className="w-full h-full object-cover" />
+                  <Image src={images[selectedImage]} alt={product.titleAr || product.title} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-300">
                     <Package size={64} />
@@ -124,7 +125,7 @@ export default function ProductDetailPage() {
                       selectedImage === index ? 'border-primary-600 shadow-lg' : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <Image src={img} alt="" fill className="object-cover" sizes="80px" />
                   </button>
                 ))}
               </div>

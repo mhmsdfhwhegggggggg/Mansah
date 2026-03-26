@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { Search, Package, CheckCircle2, Clock, Truck, CreditCard } from 'lucide-react'
@@ -177,8 +178,8 @@ export default function TrackPage() {
                   const images = JSON.parse(item.product?.images || '[]')
                   return (
                     <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                      <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                        {images[0] && <img src={images[0]} alt="" className="w-full h-full object-cover" />}
+                      <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 relative">
+                        {images[0] && <Image src={images[0]} alt="" fill className="object-cover" sizes="48px" />}
                       </div>
                       <div>
                         <p className="text-sm font-medium text-gray-800">{item.product?.titleAr || item.product?.title}</p>

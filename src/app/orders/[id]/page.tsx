@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import Image from 'next/image'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { Package, CheckCircle2, Clock, Truck, CreditCard, MapPin, ArrowRight } from 'lucide-react'
@@ -141,8 +142,8 @@ export default function OrderDetailPage() {
                   const images = item.product ? JSON.parse(item.product.images || '[]') : []
                   return (
                     <div key={item.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                      <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                        {images[0] && <img src={images[0]} alt="" className="w-full h-full object-cover" />}
+                      <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 relative">
+                        {images[0] && <Image src={images[0]} alt="" fill className="object-cover" sizes="64px" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-800 text-sm truncate">

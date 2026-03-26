@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import Image from 'next/image'
 import Navbar from '@/components/layout/Navbar'
 import { ClipboardList, CheckCircle2, Clock, Package, AlertCircle, Play, Eye, Truck } from 'lucide-react'
 import { format } from 'date-fns'
@@ -234,9 +235,9 @@ export default function AgentDashboard() {
                       <div className="mt-3 space-y-2">
                         {task.order.items.map((item, index) => (
                           <div key={index} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                            <div className="w-10 h-10 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+                            <div className="w-10 h-10 bg-gray-200 rounded overflow-hidden flex-shrink-0 relative">
                               {JSON.parse(item.product.images || '[]')[0] && (
-                                <img src={JSON.parse(item.product.images)[0]} alt="" className="w-full h-full object-cover" />
+                                <Image src={JSON.parse(item.product.images)[0]} alt="" fill className="object-cover" sizes="40px" />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">

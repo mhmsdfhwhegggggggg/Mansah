@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, Package } from 'lucide-react'
@@ -51,9 +52,9 @@ export default function CartPage() {
           <div className="lg:col-span-2 space-y-4">
             {items.map((item) => (
               <div key={item.id} className="card p-4 flex gap-4">
-                <div className="w-24 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
+                <div className="w-24 h-24 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative">
                   {item.image ? (
-                    <img src={item.image} alt={item.titleAr || item.title} className="w-full h-full object-cover" />
+                    <Image src={item.image} alt={item.titleAr || item.title} fill className="object-cover" sizes="96px" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300">
                       <Package size={24} />
