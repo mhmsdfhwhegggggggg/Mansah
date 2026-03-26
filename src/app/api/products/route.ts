@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const platform = searchParams.get('platform') || ''
     const category = searchParams.get('category') || ''
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '12')
+    const limit = Math.min(parseInt(searchParams.get('limit') || '12'), 100)
     const sort = searchParams.get('sort') || 'newest'
     const featured = searchParams.get('featured') === 'true'
 
@@ -18,9 +18,9 @@ export async function GET(request: NextRequest) {
 
     if (search) {
       where.OR = [
-        { title: { contains: search } },
-        { titleAr: { contains: search } },
-        { description: { contains: search } },
+        { title: { contains: search, mode: 'insensitive' } },
+        { titleAr: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
       ]
     }
 
@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Products fetch error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Products fetch error:', error)
     return NextResponse.json(
       { error: 'حدث خطأ أثناء جلب المنتجات' },
       { status: 500 }
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ product }, { status: 201 })
   } catch (error) {
-    console.error('Product create error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Product create error:', error)
     return NextResponse.json(
       { error: 'حدث خطأ أثناء إنشاء المنتج' },
       { status: 500 }

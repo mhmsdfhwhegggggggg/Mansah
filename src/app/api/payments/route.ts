@@ -14,12 +14,19 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const status = searchParams.get('status') || ''
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 100)
 
     const where: Record<string, unknown> = {}
 
+    // CUSTOMER can only see their own payments, AGENT can only see payments for orders with tasks assigned to them
     if (session.user.role === 'CUSTOMER') {
       where.userId = session.user.id
+    } else if (session.user.role === 'AGENT') {
+      where.order = {
+        tasks: {
+          some: { agentId: session.user.id },
+        },
+      }
     }
 
     if (status) {
@@ -45,7 +52,7 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (error) {
-    console.error('Payments fetch error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Payments fetch error:', error)
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }
@@ -104,7 +111,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ payment }, { status: 201 })
   } catch (error) {
-    console.error('Payment create error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Payment create error:', error)
     return NextResponse.json({ error: 'حدث خطأ أثناء إنشاء الدفعة' }, { status: 500 })
   }
 }

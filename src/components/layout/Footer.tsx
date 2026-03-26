@@ -35,11 +35,11 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-bold mb-4">الدعم</h4>
             <ul className="space-y-2">
-              <li><Link href="#" className="hover:text-primary-400 transition-colors text-sm">كيف نعمل؟</Link></li>
-              <li><Link href="#" className="hover:text-primary-400 transition-colors text-sm">الأسئلة الشائعة</Link></li>
-              <li><Link href="#" className="hover:text-primary-400 transition-colors text-sm">سياسة الإرجاع</Link></li>
-              <li><Link href="#" className="hover:text-primary-400 transition-colors text-sm">شروط الاستخدام</Link></li>
-              <li><Link href="#" className="hover:text-primary-400 transition-colors text-sm">سياسة الخصوصية</Link></li>
+              <li><Link href="/how-it-works" className="hover:text-primary-400 transition-colors text-sm">كيف نعمل؟</Link></li>
+              <li><Link href="/faq" className="hover:text-primary-400 transition-colors text-sm">الأسئلة الشائعة</Link></li>
+              <li><Link href="/return-policy" className="hover:text-primary-400 transition-colors text-sm">سياسة الإرجاع</Link></li>
+              <li><Link href="/terms" className="hover:text-primary-400 transition-colors text-sm">شروط الاستخدام</Link></li>
+              <li><Link href="/privacy" className="hover:text-primary-400 transition-colors text-sm">سياسة الخصوصية</Link></li>
             </ul>
           </div>
 

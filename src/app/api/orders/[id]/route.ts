@@ -34,7 +34,7 @@ export async function GET(
 
     return NextResponse.json({ order })
   } catch (error) {
-    console.error('Order fetch error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Order fetch error:', error)
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }
@@ -87,7 +87,7 @@ export async function PUT(
 
     return NextResponse.json({ order })
   } catch (error) {
-    console.error('Order update error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Order update error:', error)
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { categoryCreateSchema } from '@/lib/validations'
 
 export async function GET() {
   try {
@@ -16,7 +17,7 @@ export async function GET() {
 
     return NextResponse.json({ categories })
   } catch (error) {
-    console.error('Categories fetch error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Categories fetch error:', error)
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }
@@ -29,7 +30,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, nameAr, slug, icon, image, parentId } = body
+    const parsed = categoryCreateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'بيانات غير صالحة' },
+        { status: 400 }
+      )
+    }
+    const { name, nameAr, slug, icon, image, parentId } = parsed.data
 
     const category = await prisma.category.create({
       data: {
@@ -44,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ category }, { status: 201 })
   } catch (error) {
-    console.error('Category create error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Category create error:', error)
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }

@@ -8,18 +8,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'غير متاح في بيئة الإنتاج' }, { status: 403 })
   }
 
-  // Require seed secret key if configured
+  // Always require seed secret key
   const seedSecret = process.env.SEED_SECRET_KEY
-  if (seedSecret) {
-    const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${seedSecret}`) {
-      return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
-    }
+  if (!seedSecret) {
+    return NextResponse.json({ error: 'مفتاح SEED_SECRET_KEY غير معيّن' }, { status: 403 })
+  }
+  const authHeader = request.headers.get('authorization')
+  if (authHeader !== `Bearer ${seedSecret}`) {
+    return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
   }
 
   try {
     // Create admin user
-    const adminPassword = await bcrypt.hash('admin123', 12)
+    const adminPassword = await bcrypt.hash('Admin@Mansah2024!', 12)
     const admin = await prisma.user.upsert({
       where: { email: 'admin@mansah.com' },
       update: {},
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Create agent user
-    const agentPassword = await bcrypt.hash('agent123', 12)
+    const agentPassword = await bcrypt.hash('Agent@Mansah2024!', 12)
     const agent = await prisma.user.upsert({
       where: { email: 'agent@mansah.com' },
       update: {},
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Create test customer
-    const customerPassword = await bcrypt.hash('customer123', 12)
+    const customerPassword = await bcrypt.hash('Customer@Mansah2024!', 12)
     const customer = await prisma.user.upsert({
       where: { email: 'customer@test.com' },
       update: {},
@@ -298,7 +299,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Seed error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Seed error:', error)
     return NextResponse.json({ error: 'حدث خطأ أثناء تهيئة البيانات' }, { status: 500 })
   }
 }

@@ -52,12 +52,20 @@ export async function PUT(
       })
 
       // Auto-create agent task for order fulfillment
+      // Try to assign to an available agent automatically
+      const availableAgent = await prisma.user.findFirst({
+        where: { role: 'AGENT', isActive: true },
+        orderBy: { createdAt: 'asc' },
+      })
+
       await prisma.task.create({
         data: {
           description: `تم تأكيد الدفع للطلب #${payment.order.orderNumber}. يرجى البدء بعملية الشراء والشحن.`,
           type: 'PURCHASE',
           priority: 'HIGH',
           orderId: payment.orderId,
+          agentId: availableAgent?.id || null,
+          status: availableAgent ? 'ASSIGNED' : 'PENDING',
         },
       })
     }
@@ -75,7 +83,7 @@ export async function PUT(
 
     return NextResponse.json({ payment })
   } catch (error) {
-    console.error('Payment update error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Payment update error:', error)
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }

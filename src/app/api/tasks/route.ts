@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || ''
     const type = searchParams.get('type') || ''
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 100)
 
     const where: Record<string, unknown> = {}
 
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (error) {
-    console.error('Tasks fetch error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Tasks fetch error:', error)
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ task }, { status: 201 })
   } catch (error) {
-    console.error('Task create error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Task create error:', error)
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }

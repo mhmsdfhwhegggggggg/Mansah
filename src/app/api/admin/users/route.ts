@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const role = searchParams.get('role') || ''
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100)
 
     const where: Record<string, unknown> = {}
     if (role) where.role = role
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (error) {
-    console.error('Users fetch error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Users fetch error:', error)
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }
@@ -63,7 +63,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ user })
   } catch (error) {
-    console.error('User update error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('User update error:', error)
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }

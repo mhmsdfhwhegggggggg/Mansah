@@ -45,7 +45,7 @@ export const orderCreateSchema = z.object({
     productId: z.string().min(1),
     quantity: z.number().int().positive(),
   })).min(1, 'السلة فارغة'),
-  shippingAddress: z.string().min(1, 'العنوان مطلوب').optional(),
+  shippingAddress: z.string().min(1, 'العنوان مطلوب'),
   shippingCity: z.string().optional(),
   shippingCountry: z.string().optional(),
   shippingPhone: z.string().optional(),

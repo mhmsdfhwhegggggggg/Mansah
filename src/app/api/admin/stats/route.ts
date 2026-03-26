@@ -59,7 +59,7 @@ export async function GET() {
       recentOrders,
     })
   } catch (error) {
-    console.error('Admin stats error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Admin stats error:', error)
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }

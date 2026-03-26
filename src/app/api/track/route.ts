@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ order })
   } catch (error) {
-    console.error('Track order error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Track order error:', error)
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }

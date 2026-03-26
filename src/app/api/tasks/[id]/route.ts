@@ -78,7 +78,7 @@ export async function PUT(
 
     return NextResponse.json({ task })
   } catch (error) {
-    console.error('Task update error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Task update error:', error)
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }

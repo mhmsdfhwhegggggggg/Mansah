@@ -28,7 +28,7 @@ export async function GET(
 
     return NextResponse.json({ product })
   } catch (error) {
-    console.error('Product fetch error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Product fetch error:', error)
     return NextResponse.json(
       { error: 'حدث خطأ أثناء جلب المنتج' },
       { status: 500 }
@@ -77,7 +77,7 @@ export async function PUT(
 
     return NextResponse.json({ product })
   } catch (error) {
-    console.error('Product update error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Product update error:', error)
     return NextResponse.json(
       { error: 'حدث خطأ أثناء تحديث المنتج' },
       { status: 500 }
@@ -102,7 +102,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'تم حذف المنتج بنجاح' })
   } catch (error) {
-    console.error('Product delete error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Product delete error:', error)
     return NextResponse.json(
       { error: 'حدث خطأ أثناء حذف المنتج' },
       { status: 500 }

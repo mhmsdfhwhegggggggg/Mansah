@@ -98,7 +98,7 @@ export default function CheckoutPage() {
       }
 
       // Create payment
-      await fetch('/api/payments', {
+      const paymentRes = await fetch('/api/payments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -108,6 +108,13 @@ export default function CheckoutPage() {
           method: paymentMethod,
         }),
       })
+
+      const paymentData = await paymentRes.json()
+
+      if (!paymentRes.ok) {
+        toast.error(paymentData.error || 'حدث خطأ أثناء إنشاء الدفعة')
+        return
+      }
 
       clearCart()
       toast.success('تم إنشاء الطلب بنجاح!')

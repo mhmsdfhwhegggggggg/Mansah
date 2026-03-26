@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     const searchParams = request.nextUrl.searchParams
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 100)
     const status = searchParams.get('status') || ''
 
     const where: Record<string, unknown> = {}
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (error) {
-    console.error('Orders fetch error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Orders fetch error:', error)
     return NextResponse.json({ error: 'حدث خطأ أثناء جلب الطلبات' }, { status: 500 })
   }
 }
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ order }, { status: 201 })
   } catch (error) {
-    console.error('Order create error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Order create error:', error)
     return NextResponse.json({ error: 'حدث خطأ أثناء إنشاء الطلب' }, { status: 500 })
   }
 }

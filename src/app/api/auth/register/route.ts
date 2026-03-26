@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import prisma from '@/lib/prisma'
+import { registerSchema } from '@/lib/validations'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, password, phone, country, city } = body
-
-    if (!name || !email || !password) {
+    const parsed = registerSchema.safeParse(body)
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'الاسم والبريد الإلكتروني وكلمة المرور مطلوبة' },
+        { error: parsed.error.issues[0]?.message || 'بيانات غير صالحة' },
         { status: 400 }
       )
     }
+    const { name, email, password, phone, country, city } = parsed.data
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
-    console.error('Registration error:', error)
+    if (process.env.NODE_ENV !== 'production') console.error('Registration error:', error)
     return NextResponse.json(
       { error: 'حدث خطأ أثناء إنشاء الحساب' },
       { status: 500 }
