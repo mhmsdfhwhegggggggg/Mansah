@@ -89,13 +89,13 @@ export default function Navbar() {
                       طلباتي
                     </Link>
                     {(session.user.role === 'ADMIN') && (
-                      <Link href="/admin/dashboard" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>
+                      <Link href="/admin" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>
                         <LayoutDashboard size={16} />
                         لوحة التحكم
                       </Link>
                     )}
                     {(session.user.role === 'AGENT') && (
-                      <Link href="/agent/dashboard" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>
+                      <Link href="/agent" className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-50" onClick={() => setUserMenuOpen(false)}>
                         <LayoutDashboard size={16} />
                         لوحة المندوب
                       </Link>
@@ -112,7 +112,7 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              <Link href="/login" className="btn-primary text-sm !px-4 !py-2">
+              <Link href="/auth/login" className="btn-primary text-sm !px-4 !py-2">
                 تسجيل الدخول
               </Link>
             )}
@@ -153,12 +153,12 @@ export default function Navbar() {
               {session ? (
                 <>
                   <Link href="/orders" className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>طلباتي</Link>
-                  {session.user.role === 'ADMIN' && <Link href="/admin/dashboard" className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>لوحة التحكم</Link>}
-                  {session.user.role === 'AGENT' && <Link href="/agent/dashboard" className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>لوحة المندوب</Link>}
+                  {session.user.role === 'ADMIN' && <Link href="/admin" className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>لوحة التحكم</Link>}
+                  {session.user.role === 'AGENT' && <Link href="/agent" className="px-4 py-2 text-gray-600 hover:bg-gray-50 rounded-lg" onClick={() => setMobileMenuOpen(false)}>لوحة المندوب</Link>}
                   <button onClick={() => signOut()} className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-right">تسجيل الخروج</button>
                 </>
               ) : (
-                <Link href="/login" className="btn-primary text-center text-sm" onClick={() => setMobileMenuOpen(false)}>تسجيل الدخول</Link>
+                <Link href="/auth/login" className="btn-primary text-center text-sm" onClick={() => setMobileMenuOpen(false)}>تسجيل الدخول</Link>
               )}
             </div>
           </div>

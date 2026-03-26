@@ -235,7 +235,7 @@ export default function HomePage() {
             سجل حسابك مجاناً واستمتع بالتسوق من أكبر المتاجر العالمية بطرق دفع محلية
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/register" className="bg-white text-primary-700 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all shadow-xl">
+            <Link href="/auth/register" className="bg-white text-primary-700 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all shadow-xl">
               أنشئ حساب مجاني
             </Link>
             <Link href="/products" className="border-2 border-white/30 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/10 transition-all">

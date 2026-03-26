@@ -1,8 +1,22 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import prisma from '@/lib/prisma'
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  // Block in production
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'غير متاح في بيئة الإنتاج' }, { status: 403 })
+  }
+
+  // Require seed secret key if configured
+  const seedSecret = process.env.SEED_SECRET_KEY
+  if (seedSecret) {
+    const authHeader = request.headers.get('authorization')
+    if (authHeader !== `Bearer ${seedSecret}`) {
+      return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
+    }
+  }
+
   try {
     // Create admin user
     const adminPassword = await bcrypt.hash('admin123', 12)
@@ -276,9 +290,9 @@ export async function POST() {
     return NextResponse.json({
       message: 'تم تهيئة البيانات بنجاح',
       data: {
-        admin: { email: admin.email, password: 'admin123' },
-        agent: { email: agent.email, password: 'agent123' },
-        customer: { email: customer.email, password: 'customer123' },
+        admin: { email: admin.email },
+        agent: { email: agent.email },
+        customer: { email: customer.email },
         products: sampleProducts.length,
         categories: categories.length,
       },

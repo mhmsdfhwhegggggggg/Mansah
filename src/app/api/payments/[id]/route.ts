@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { paymentUpdateSchema } from '@/lib/validations'
 
 export async function PUT(
   request: NextRequest,
@@ -14,7 +15,14 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { status, notes } = body
+    const parsed = paymentUpdateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'بيانات غير صالحة' },
+        { status: 400 }
+      )
+    }
+    const { status, notes } = parsed.data
 
     const payment = await prisma.payment.update({
       where: { id: params.id },
@@ -40,6 +48,16 @@ export async function PUT(
           status: 'PAYMENT_CONFIRMED',
           note: 'تم تأكيد الدفع من قبل الإدارة',
           createdBy: session.user.id,
+        },
+      })
+
+      // Auto-create agent task for order fulfillment
+      await prisma.task.create({
+        data: {
+          description: `تم تأكيد الدفع للطلب #${payment.order.orderNumber}. يرجى البدء بعملية الشراء والشحن.`,
+          type: 'PURCHASE',
+          priority: 'HIGH',
+          orderId: payment.orderId,
         },
       })
     }
