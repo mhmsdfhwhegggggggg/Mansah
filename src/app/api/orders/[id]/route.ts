@@ -49,6 +49,11 @@ export async function PUT(
       return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
     }
 
+    // Only ADMIN and AGENT can update orders
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'AGENT') {
+      return NextResponse.json({ error: 'غير مصرح - يجب أن تكون مديراً أو مندوباً' }, { status: 403 })
+    }
+
     const body = await request.json()
     const { status, trackingNumber, notes, cancelReason, estimatedDelivery } = body
 

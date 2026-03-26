@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { paymentCreateSchema } from '@/lib/validations'
 
 export async function GET(request: NextRequest) {
   try {
@@ -57,21 +58,26 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const {
-      orderId, amount, currency, method,
-      receiptImage, bankName, accountNumber, senderName, notes
-    } = body
-
-    if (!orderId || !amount || !method) {
+    const parsed = paymentCreateSchema.safeParse(body)
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'معرف الطلب والمبلغ وطريقة الدفع مطلوبة' },
+        { error: parsed.error.issues[0]?.message || 'بيانات غير صالحة' },
         { status: 400 }
       )
     }
+    const {
+      orderId, amount, currency, method,
+      receiptImage, bankName, accountNumber, senderName, notes
+    } = parsed.data
 
     const order = await prisma.order.findUnique({ where: { id: orderId } })
     if (!order) {
       return NextResponse.json({ error: 'الطلب غير موجود' }, { status: 404 })
+    }
+
+    // Verify the order belongs to the current user
+    if (order.userId !== session.user.id) {
+      return NextResponse.json({ error: 'غير مصرح - هذا الطلب لا يخصك' }, { status: 403 })
     }
 
     const payment = await prisma.payment.create({
@@ -81,7 +87,7 @@ export async function POST(request: NextRequest) {
         amount,
         currency: currency || order.currency,
         method,
-        status: method === 'STRIPE' ? 'CONFIRMED' : 'PENDING',
+        status: 'PENDING',
         receiptImage: receiptImage || null,
         bankName: bankName || null,
         accountNumber: accountNumber || null,
@@ -93,20 +99,8 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    if (method === 'STRIPE') {
-      await prisma.order.update({
-        where: { id: orderId },
-        data: { status: 'PAYMENT_CONFIRMED' },
-      })
-      await prisma.orderStatus.create({
-        data: {
-          orderId,
-          status: 'PAYMENT_CONFIRMED',
-          note: 'تم تأكيد الدفع عبر بطاقة الائتمان',
-          createdBy: session.user.id,
-        },
-      })
-    }
+    // Stripe payments require server-side verification via webhook
+    // All payments start as PENDING and must be confirmed by admin or webhook
 
     return NextResponse.json({ payment }, { status: 201 })
   } catch (error) {

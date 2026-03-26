@@ -41,7 +41,7 @@ export default function OrderDetailPage() {
       <div className="min-h-screen bg-gray-50">
         <Navbar />
         <div className="max-w-lg mx-auto px-4 py-20 text-center">
-          <Link href="/login" className="btn-primary">تسجيل الدخول</Link>
+          <Link href="/auth/login" className="btn-primary">تسجيل الدخول</Link>
         </div>
       </div>
     )

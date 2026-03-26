@@ -30,7 +30,7 @@ export default function OrdersPage() {
         <Navbar />
         <div className="max-w-lg mx-auto px-4 py-20 text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">يجب تسجيل الدخول</h2>
-          <Link href="/login" className="btn-primary">تسجيل الدخول</Link>
+          <Link href="/auth/login" className="btn-primary">تسجيل الدخول</Link>
         </div>
         <Footer />
       </div>

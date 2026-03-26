@@ -44,7 +44,7 @@ export default function CheckoutPage() {
         <div className="max-w-lg mx-auto px-4 py-20 text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-4">يجب تسجيل الدخول أولاً</h2>
           <p className="text-gray-500 mb-8">قم بتسجيل الدخول أو إنشاء حساب جديد لإتمام الطلب</p>
-          <Link href="/login" className="btn-primary">تسجيل الدخول</Link>
+          <Link href="/auth/login" className="btn-primary">تسجيل الدخول</Link>
         </div>
       </div>
     )

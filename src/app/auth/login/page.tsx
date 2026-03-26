@@ -112,7 +112,7 @@ export default function LoginPage() {
           <div className="mt-6 text-center">
             <p className="text-gray-500 text-sm">
               ليس لديك حساب؟{' '}
-              <Link href="/register" className="text-primary-600 font-medium hover:text-primary-700">
+              <Link href="/auth/register" className="text-primary-600 font-medium hover:text-primary-700">
                 أنشئ حساب جديد
               </Link>
             </p>
