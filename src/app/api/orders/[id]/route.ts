@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { orderUpdateSchema } from '@/lib/validations'
+import { logger } from '@/lib/logger'
+
+// Valid order status transitions (state machine)
+const VALID_TRANSITIONS: Record<string, string[]> = {
+  PENDING: ['PAYMENT_CONFIRMED', 'CANCELLED'],
+  PAYMENT_CONFIRMED: ['PURCHASING', 'CANCELLED', 'REFUNDED'],
+  PURCHASING: ['PURCHASED', 'CANCELLED', 'REFUNDED'],
+  PURCHASED: ['SHIPPING', 'CANCELLED', 'REFUNDED'],
+  SHIPPING: ['IN_TRANSIT', 'CANCELLED'],
+  IN_TRANSIT: ['DELIVERED', 'CANCELLED'],
+  DELIVERED: ['REFUNDED'],
+  CANCELLED: [],
+  REFUNDED: [],
+}
 
 export async function GET(
   request: NextRequest,
@@ -34,7 +49,7 @@ export async function GET(
 
     return NextResponse.json({ order })
   } catch (error) {
-    console.error('Order fetch error:', error)
+    logger.error('Order fetch error', error, 'orders/[id]')
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }
@@ -55,7 +70,32 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { status, trackingNumber, notes, cancelReason, estimatedDelivery } = body
+    const parsed = orderUpdateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'بيانات غير صالحة' },
+        { status: 400 }
+      )
+    }
+    const { status, trackingNumber, notes, cancelReason, estimatedDelivery } = parsed.data
+
+    // Validate state transition
+    if (status) {
+      const currentOrder = await prisma.order.findUnique({
+        where: { id: params.id },
+        select: { status: true },
+      })
+      if (!currentOrder) {
+        return NextResponse.json({ error: 'الطلب غير موجود' }, { status: 404 })
+      }
+      const allowed = VALID_TRANSITIONS[currentOrder.status]
+      if (allowed && !allowed.includes(status)) {
+        return NextResponse.json(
+          { error: `لا يمكن الانتقال من ${currentOrder.status} إلى ${status}` },
+          { status: 400 }
+        )
+      }
+    }
 
     const updateData: Record<string, unknown> = {}
     if (status) updateData.status = status
@@ -87,7 +127,7 @@ export async function PUT(
 
     return NextResponse.json({ order })
   } catch (error) {
-    console.error('Order update error:', error)
+    logger.error('Order update error', error, 'orders/[id]')
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }

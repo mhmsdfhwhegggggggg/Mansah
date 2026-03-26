@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import prisma from '@/lib/prisma'
+import { checkRateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit'
+import { logger } from '@/lib/logger'
 
 export async function POST(request: NextRequest) {
   // Block in production
@@ -8,18 +10,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'غير متاح في بيئة الإنتاج' }, { status: 403 })
   }
 
-  // Require seed secret key if configured
+  // Rate limit: 3 requests per minute
+  const ip = getClientIp(request)
+  const rateLimitResult = checkRateLimit(`seed:${ip}`, RATE_LIMITS.seed)
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { error: 'عدد كبير من المحاولات. يرجى المحاولة لاحقاً' },
+      { status: 429 }
+    )
+  }
+
+  // Always require seed secret key
   const seedSecret = process.env.SEED_SECRET_KEY
-  if (seedSecret) {
-    const authHeader = request.headers.get('authorization')
-    if (authHeader !== `Bearer ${seedSecret}`) {
-      return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
-    }
+  if (!seedSecret) {
+    return NextResponse.json({ error: 'مفتاح SEED_SECRET_KEY غير معيّن' }, { status: 403 })
+  }
+  const authHeader = request.headers.get('authorization')
+  if (authHeader !== `Bearer ${seedSecret}`) {
+    return NextResponse.json({ error: 'غير مصرح' }, { status: 401 })
   }
 
   try {
-    // Create admin user
-    const adminPassword = await bcrypt.hash('admin123', 12)
+    // Create admin user - passwords from environment variables
+    const adminPass = process.env.SEED_ADMIN_PASSWORD || 'Admin@Mansah2024!'
+    const agentPass = process.env.SEED_AGENT_PASSWORD || 'Agent@Mansah2024!'
+    const customerPass = process.env.SEED_CUSTOMER_PASSWORD || 'Customer@Mansah2024!'
+
+    const adminPassword = await bcrypt.hash(adminPass, 12)
     const admin = await prisma.user.upsert({
       where: { email: 'admin@mansah.com' },
       update: {},
@@ -35,7 +52,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Create agent user
-    const agentPassword = await bcrypt.hash('agent123', 12)
+    const agentPassword = await bcrypt.hash(agentPass, 12)
     const agent = await prisma.user.upsert({
       where: { email: 'agent@mansah.com' },
       update: {},
@@ -51,7 +68,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Create test customer
-    const customerPassword = await bcrypt.hash('customer123', 12)
+    const customerPassword = await bcrypt.hash(customerPass, 12)
     const customer = await prisma.user.upsert({
       where: { email: 'customer@test.com' },
       update: {},
@@ -298,7 +315,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Seed error:', error)
+    logger.error('Seed error', error, 'seed')
     return NextResponse.json({ error: 'حدث خطأ أثناء تهيئة البيانات' }, { status: 500 })
   }
 }

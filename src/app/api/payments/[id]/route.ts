@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 import { paymentUpdateSchema } from '@/lib/validations'
+import { logger } from '@/lib/logger'
 
 export async function PUT(
   request: NextRequest,
@@ -52,12 +53,31 @@ export async function PUT(
       })
 
       // Auto-create agent task for order fulfillment
+      // Load-balanced assignment: pick the agent with the fewest open tasks
+      const agents = await prisma.user.findMany({
+        where: { role: 'AGENT', isActive: true },
+        select: {
+          id: true,
+          _count: {
+            select: {
+              tasks: { where: { status: { in: ['PENDING', 'ASSIGNED', 'IN_PROGRESS'] } } },
+            },
+          },
+        },
+      })
+      // Sort by task count ascending to pick the least loaded agent
+      const availableAgent = agents.length > 0
+        ? agents.sort((a, b) => a._count.tasks - b._count.tasks)[0]
+        : null
+
       await prisma.task.create({
         data: {
           description: `تم تأكيد الدفع للطلب #${payment.order.orderNumber}. يرجى البدء بعملية الشراء والشحن.`,
           type: 'PURCHASE',
           priority: 'HIGH',
           orderId: payment.orderId,
+          agentId: availableAgent?.id || null,
+          status: availableAgent ? 'ASSIGNED' : 'PENDING',
         },
       })
     }
@@ -75,7 +95,7 @@ export async function PUT(
 
     return NextResponse.json({ payment })
   } catch (error) {
-    console.error('Payment update error:', error)
+    logger.error('Payment update error', error, 'payments/[id]')
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }

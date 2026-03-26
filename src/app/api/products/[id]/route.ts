@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { productCreateSchema } from '@/lib/validations'
+import { logger } from '@/lib/logger'
 
 export async function GET(
   request: NextRequest,
@@ -28,7 +30,7 @@ export async function GET(
 
     return NextResponse.json({ product })
   } catch (error) {
-    console.error('Product fetch error:', error)
+    logger.error('Product fetch error', error, 'products/[id]')
     return NextResponse.json(
       { error: 'حدث خطأ أثناء جلب المنتج' },
       { status: 500 }
@@ -47,7 +49,17 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { title, titleAr, description, descriptionAr, price, originalPrice, currency, images, sourceUrl, sourcePlatform, categoryId, rating, reviewCount, specifications, shippingWeight, isFeatured, inStock, isActive } = body
+    // Validate with partial schema (all fields optional for update)
+    const parsed = productCreateSchema.partial().safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'بيانات غير صالحة' },
+        { status: 400 }
+      )
+    }
+    const { title, titleAr, description, descriptionAr, price, originalPrice, currency, images, sourceUrl, sourcePlatform, categoryId, rating, reviewCount, specifications, shippingWeight, isFeatured } = parsed.data
+    // These fields are not in the schema but allowed for update
+    const { inStock, isActive } = body as { inStock?: boolean; isActive?: boolean }
 
     const updateData: Record<string, unknown> = {}
     if (title !== undefined) updateData.title = title
@@ -77,7 +89,7 @@ export async function PUT(
 
     return NextResponse.json({ product })
   } catch (error) {
-    console.error('Product update error:', error)
+    logger.error('Product update error', error, 'products/[id]')
     return NextResponse.json(
       { error: 'حدث خطأ أثناء تحديث المنتج' },
       { status: 500 }
@@ -102,7 +114,7 @@ export async function DELETE(
 
     return NextResponse.json({ message: 'تم حذف المنتج بنجاح' })
   } catch (error) {
-    console.error('Product delete error:', error)
+    logger.error('Product delete error', error, 'products/[id]')
     return NextResponse.json(
       { error: 'حدث خطأ أثناء حذف المنتج' },
       { status: 500 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { logger } from '@/lib/logger'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || ''
     const type = searchParams.get('type') || ''
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const limit = Math.min(parseInt(searchParams.get('limit') || '10'), 100)
 
     const where: Record<string, unknown> = {}
 
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
       pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     })
   } catch (error) {
-    console.error('Tasks fetch error:', error)
+    logger.error('Tasks fetch error', error, 'tasks')
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ task }, { status: 201 })
   } catch (error) {
-    console.error('Task create error:', error)
+    logger.error('Task create error', error, 'tasks')
     return NextResponse.json({ error: 'حدث خطأ' }, { status: 500 })
   }
 }
