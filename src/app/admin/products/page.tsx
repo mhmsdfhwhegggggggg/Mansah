@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Package, Plus, Edit, Trash2, Search, Filter, ArrowLeft, Eye, EyeOff, Star } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -265,11 +266,15 @@ export default function AdminProductsPage() {
                   <tr key={product.id} className="hover:bg-gray-50">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={getFirstImage(product.images)}
-                          alt={product.title}
-                          className="w-12 h-12 rounded-lg object-cover"
-                        />
+                        <div className="relative w-12 h-12 rounded-lg overflow-hidden">
+                          <Image
+                            src={getFirstImage(product.images)}
+                            alt={product.title}
+                            fill
+                            className="object-cover"
+                            sizes="48px"
+                          />
+                        </div>
                         <div>
                           <p className="font-medium text-gray-800 text-sm">{product.title}</p>
                           {product.category && (

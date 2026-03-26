@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/layout/Navbar'
 import Footer from '@/components/layout/Footer'
+import Image from 'next/image'
 import { Search, SlidersHorizontal, Star, ChevronDown, Package } from 'lucide-react'
 import { ProductType } from '@/types'
 
@@ -164,7 +165,7 @@ function ProductsContent() {
                   <Link key={product.id} href={`/products/${product.id}`} className="group card hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                     <div className="aspect-square bg-gray-100 relative overflow-hidden">
                       {images[0] ? (
-                        <img src={images[0]} alt={product.titleAr || product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <Image src={images[0]} alt={product.titleAr || product.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-gray-300">
                           <Package size={48} />

@@ -49,7 +49,7 @@ body {
   }
 
   .gradient-bg {
-    @apply bg-gradient-to-br from-primary-600 via-primary-700 to-indigo-800;
+    @apply bg-gradient-to-br from-primary-500 via-primary-600 to-orange-700;
   }
 
   .glass {

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import Image from 'next/image'
 import Navbar from '@/components/layout/Navbar'
 import { useCartStore } from '@/store/cart'
 import { CreditCard, Building2, Smartphone, Upload, MapPin, ArrowLeft, Shield, CheckCircle2 } from 'lucide-react'
@@ -249,8 +250,8 @@ export default function CheckoutPage() {
                 <div className="space-y-3 mb-4">
                   {items.map((item) => (
                     <div key={item.id} className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                        {item.image && <img src={item.image} alt="" className="w-full h-full object-cover" />}
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative">
+                        {item.image && <Image src={item.image} alt="" fill className="object-cover" sizes="48px" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-800 truncate">{item.titleAr || item.title}</p>
