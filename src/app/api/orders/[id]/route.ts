@@ -115,7 +115,7 @@ export async function PUT(
     })
 
     if (status) {
-      await prisma.orderStatus.create({
+      await prisma.orderStatusLog.create({
         data: {
           orderId: params.id,
           status,

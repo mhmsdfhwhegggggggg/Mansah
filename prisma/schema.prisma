@@ -7,13 +7,74 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  AGENT
+}
+
+enum OrderStatus {
+  PENDING
+  PAYMENT_CONFIRMED
+  PURCHASING
+  PURCHASED
+  SHIPPING
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  MOBILE_WALLET
+  STRIPE
+  RECEIPT_UPLOAD
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+  REFUNDED
+}
+
+enum TaskType {
+  PURCHASE
+  VERIFY_PRICE
+  SHIP
+  DELIVER
+}
+
+enum TaskStatus {
+  PENDING
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum SourcePlatform {
+  AMAZON
+  ALIBABA
+  SHEIN
+  OTHER
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String
   email         String    @unique
   password      String
   phone         String?
-  role          String    @default("CUSTOMER") // CUSTOMER, ADMIN, AGENT
+  role          UserRole  @default(CUSTOMER)
   country       String?
   city          String?
   address       String?
@@ -54,7 +115,7 @@ model Product {
   currency        String    @default("USD")
   images          String    // JSON array of image URLs
   sourceUrl       String    // Original URL on Amazon/AliExpress/Shein
-  sourcePlatform  String    // AMAZON, ALIBABA, SHEIN, OTHER
+  sourcePlatform  SourcePlatform
   categoryId      String?
   category        Category? @relation(fields: [categoryId], references: [id])
   inStock         Boolean   @default(true)
@@ -90,7 +151,7 @@ model Order {
   orderNumber     String    @unique
   userId          String
   user            User      @relation(fields: [userId], references: [id])
-  status          String    @default("PENDING") // PENDING, PAYMENT_CONFIRMED, PURCHASING, PURCHASED, SHIPPING, IN_TRANSIT, DELIVERED, CANCELLED, REFUNDED
+  status          OrderStatus @default(PENDING)
   totalAmount     Float
   commissionAmount Float
   shippingCost    Float     @default(0)
@@ -110,7 +171,7 @@ model Order {
   items           OrderItem[]
   payments        Payment[]
   tasks           Task[]
-  statusHistory   OrderStatus[]
+  statusHistory   OrderStatusLog[]
 }
 
 model OrderItem {
@@ -126,11 +187,11 @@ model OrderItem {
   createdAt   DateTime @default(now())
 }
 
-model OrderStatus {
-  id        String   @id @default(cuid())
+model OrderStatusLog {
+  id        String      @id @default(cuid())
   orderId   String
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  status    String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
   note      String?
   createdBy String?
   createdAt DateTime @default(now())
@@ -144,8 +205,8 @@ model Payment {
   user            User      @relation(fields: [userId], references: [id])
   amount          Float
   currency        String
-  method          String    // BANK_TRANSFER, MOBILE_WALLET, STRIPE, RECEIPT_UPLOAD
-  status          String    @default("PENDING") // PENDING, CONFIRMED, REJECTED, REFUNDED
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
   receiptImage    String?   // For receipt upload
   transactionId   String?   // For payment gateway
   bankName        String?
@@ -164,12 +225,12 @@ model Task {
   order         Order     @relation(fields: [orderId], references: [id])
   agentId       String?
   agent         User?     @relation("AgentTasks", fields: [agentId], references: [id])
-  type          String    // PURCHASE, VERIFY_PRICE, SHIP, DELIVER
-  status        String    @default("PENDING") // PENDING, ASSIGNED, IN_PROGRESS, COMPLETED, FAILED
-  priority      String    @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
+  type          TaskType      @default(PURCHASE)
+  status        TaskStatus    @default(PENDING)
+  priority      TaskPriority  @default(NORMAL)
   description   String?
-  result        String?   // JSON with task result data
-  sourcePlatform String?
+  result        String?
+  sourcePlatform SourcePlatform?
   purchaseConfirmation String?
   trackingNumber String?
   startedAt     DateTime?

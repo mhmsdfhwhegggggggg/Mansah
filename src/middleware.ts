@@ -8,7 +8,6 @@ export default withAuth(
 
     // Admin routes - require ADMIN role
     if (pathname.startsWith('/admin') && token?.role !== 'ADMIN') {
-      // Redirect to home if logged in but wrong role (not back to login)
       return NextResponse.redirect(new URL('/', req.url))
     }
 
@@ -26,7 +25,17 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ req, token }) => {
+        // For API routes, return false so withAuth returns JSON 401
+        // instead of redirecting to HTML login page
+        if (req.nextUrl.pathname.startsWith('/api/')) {
+          return !!token
+        }
+        return !!token
+      },
+    },
+    pages: {
+      signIn: '/auth/login',
     },
   }
 )
