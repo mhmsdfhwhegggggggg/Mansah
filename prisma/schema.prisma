@@ -88,6 +88,8 @@ model User {
   tasks         Task[]     @relation("AgentTasks")
   reviews       Review[]
   cartItems     CartItem[]
+  notifications Notification[]
+  auditLogs     AuditLog[] @relation("AdminAuditLogs")
 }
 
 model Category {
@@ -267,4 +269,34 @@ model Setting {
   id    String @id @default(cuid())
   key   String @unique
   value String
+}
+
+model Notification {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type            String   // ORDER_UPDATE, PAYMENT_UPDATE, TASK_UPDATE, SYSTEM
+  title           String
+  message         String
+  isRead          Boolean  @default(false)
+  relatedEntityId String?
+  createdAt       DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  adminId     String
+  admin       User     @relation("AdminAuditLogs", fields: [adminId], references: [id])
+  action      String   // CREATE, UPDATE, DELETE, CONFIRM, REJECT
+  entityType  String   // ORDER, PAYMENT, TASK, USER, PRODUCT
+  entityId    String
+  oldData     String?  // JSON
+  newData     String?  // JSON
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([adminId])
 }

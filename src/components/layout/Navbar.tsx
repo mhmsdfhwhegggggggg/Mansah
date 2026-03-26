@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
-import { useState } from 'react'
-import { ShoppingCart, User, Menu, X, Search, Package, LayoutDashboard, LogOut, ChevronDown } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ShoppingCart, User, Menu, X, Search, Package, LayoutDashboard, LogOut, ChevronDown, Bell } from 'lucide-react'
 import { useCartStore } from '@/store/cart'
 
 export default function Navbar() {
@@ -12,6 +12,17 @@ export default function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const cartItemCount = useCartStore((s) => s.getItemCount())
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  // Fetch unread notification count
+  useEffect(() => {
+    if (session?.user) {
+      fetch('/api/notifications?unread=true&limit=1')
+        .then(res => res.json())
+        .then(data => setUnreadCount(data.unreadCount || 0))
+        .catch(() => {})
+    }
+  }, [session])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -57,6 +68,18 @@ export default function Navbar() {
               <Package size={16} />
               تتبع الطلب
             </Link>
+
+            {/* Notifications */}
+            {session && (
+              <Link href="/notifications" className="relative p-2 text-gray-600 hover:text-primary-600 transition-colors">
+                <Bell size={22} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Link>
+            )}
 
             {/* Cart */}
             <Link href="/cart" className="relative p-2 text-gray-600 hover:text-primary-600 transition-colors">

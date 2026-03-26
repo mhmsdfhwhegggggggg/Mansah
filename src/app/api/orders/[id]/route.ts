@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 import { orderUpdateSchema } from '@/lib/validations'
 import { logger } from '@/lib/logger'
+import { createAuditLog, createNotification } from '@/lib/audit'
 
 // Valid order status transitions (state machine)
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -122,6 +123,24 @@ export async function PUT(
           note: notes || `تم تحديث الحالة إلى ${status}`,
           createdBy: session.user.id,
         },
+      })
+
+      // Create audit log
+      await createAuditLog({
+        adminId: session.user.id,
+        action: 'UPDATE',
+        entityType: 'ORDER',
+        entityId: params.id,
+        newData: { status, trackingNumber, notes },
+      })
+
+      // Notify customer about order status change
+      await createNotification({
+        userId: order.userId,
+        type: 'ORDER_UPDATE',
+        title: 'تحديث حالة الطلب',
+        message: `تم تحديث حالة طلبك إلى ${status}`,
+        relatedEntityId: params.id,
       })
     }
 
