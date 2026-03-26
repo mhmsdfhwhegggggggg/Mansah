@@ -54,7 +54,7 @@ export default function RegisterPage() {
       }
 
       toast.success('تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن')
-      router.push('/login')
+      router.push('/auth/login')
     } catch {
       toast.error('حدث خطأ أثناء إنشاء الحساب')
     } finally {
@@ -160,7 +160,7 @@ export default function RegisterPage() {
           <div className="mt-6 text-center">
             <p className="text-gray-500 text-sm">
               لديك حساب بالفعل؟{' '}
-              <Link href="/login" className="text-primary-600 font-medium hover:text-primary-700">
+              <Link href="/auth/login" className="text-primary-600 font-medium hover:text-primary-700">
                 تسجيل الدخول
               </Link>
             </p>

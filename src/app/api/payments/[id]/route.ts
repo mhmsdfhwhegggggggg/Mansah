@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 import { paymentUpdateSchema } from '@/lib/validations'
 import { logger } from '@/lib/logger'
+import { createAuditLog, createNotification } from '@/lib/audit'
 
 export async function PUT(
   request: NextRequest,
@@ -84,6 +85,22 @@ export async function PUT(
         return updatedPayment
       })
 
+      // Create audit log and notification
+      await createAuditLog({
+        adminId: session.user.id,
+        action: 'CONFIRM',
+        entityType: 'PAYMENT',
+        entityId: params.id,
+        newData: { status: 'CONFIRMED', orderId: payment.orderId },
+      })
+      await createNotification({
+        userId: payment.order.userId,
+        type: 'PAYMENT_UPDATE',
+        title: 'تم تأكيد الدفع',
+        message: `تم تأكيد دفعتك للطلب #${payment.order.orderNumber}. سيتم البدء بمعالجة طلبك قريباً.`,
+        relatedEntityId: payment.orderId,
+      })
+
       return NextResponse.json({ payment })
     }
 
@@ -110,6 +127,22 @@ export async function PUT(
         })
 
         return updatedPayment
+      })
+
+      // Create audit log and notification for rejection
+      await createAuditLog({
+        adminId: session.user.id,
+        action: 'REJECT',
+        entityType: 'PAYMENT',
+        entityId: params.id,
+        newData: { status: 'REJECTED', notes },
+      })
+      await createNotification({
+        userId: payment.order.userId,
+        type: 'PAYMENT_UPDATE',
+        title: 'تم رفض الدفع',
+        message: `تم رفض دفعتك للطلب #${payment.order.orderNumber}. السبب: ${notes || 'لم يتم التحقق'}`,
+        relatedEntityId: payment.orderId,
       })
 
       return NextResponse.json({ payment })

@@ -81,9 +81,11 @@ export default function AdminDashboard() {
             <h1 className="text-3xl font-bold text-gray-800">لوحة التحكم</h1>
             <p className="text-gray-500 mt-1">مرحباً، {session.user.name}</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2">
             <Link href="/admin/orders" className="btn-secondary !py-2 !px-4 text-sm">إدارة الطلبات</Link>
             <Link href="/admin/payments" className="btn-secondary !py-2 !px-4 text-sm">إدارة المدفوعات</Link>
+            <Link href="/admin/products" className="btn-secondary !py-2 !px-4 text-sm">إدارة المنتجات</Link>
+            <Link href="/admin/tasks" className="btn-secondary !py-2 !px-4 text-sm">إدارة المهام</Link>
             <Link href="/admin/users" className="btn-secondary !py-2 !px-4 text-sm">المستخدمين</Link>
           </div>
         </div>

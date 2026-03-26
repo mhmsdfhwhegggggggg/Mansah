@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
 import { OrderStatus } from '@prisma/client'
 import { logger } from '@/lib/logger'
+import { createAuditLog, createNotification } from '@/lib/audit'
 import { z } from 'zod'
 
 const taskUpdateSchema = z.object({
@@ -104,6 +105,24 @@ export async function PUT(
             note: `تم إكمال مهمة ${task.type}`,
             createdBy: session.user.id,
           },
+        })
+
+        // Notify customer about order progress
+        await createNotification({
+          userId: task.order.userId,
+          type: 'ORDER_UPDATE',
+          title: '\u062a\u062d\u062f\u064a\u062b \u062d\u0627\u0644\u0629 \u0627\u0644\u0637\u0644\u0628',
+          message: `\u062a\u0645 \u062a\u062d\u062f\u064a\u062b \u062d\u0627\u0644\u0629 \u0637\u0644\u0628\u0643 #${task.order.orderNumber} \u0625\u0644\u0649 ${orderStatus}`,
+          relatedEntityId: task.orderId,
+        })
+
+        // Create audit log
+        await createAuditLog({
+          adminId: session.user.id,
+          action: 'UPDATE',
+          entityType: 'TASK',
+          entityId: params.id,
+          newData: { status, taskType: task.type, orderStatus },
         })
       }
     }
