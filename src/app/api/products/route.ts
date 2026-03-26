@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { productCreateSchema } from '@/lib/validations'
 import { logger } from '@/lib/logger'
 
 export async function GET(request: NextRequest) {
@@ -89,18 +90,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    const parsed = productCreateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'بيانات غير صالحة' },
+        { status: 400 }
+      )
+    }
     const {
       title, titleAr, description, descriptionAr, price, originalPrice,
       currency, images, sourceUrl, sourcePlatform, categoryId,
       rating, reviewCount, specifications, shippingWeight, isFeatured
-    } = body
-
-    if (!title || !price || !sourceUrl || !sourcePlatform) {
-      return NextResponse.json(
-        { error: 'العنوان والسعر ورابط المصدر والمنصة مطلوبة' },
-        { status: 400 }
-      )
-    }
+    } = parsed.data
 
     const product = await prisma.product.create({
       data: {

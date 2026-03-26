@@ -45,7 +45,7 @@ export const orderCreateSchema = z.object({
     productId: z.string().min(1),
     quantity: z.number().int().positive(),
   })).min(1, 'السلة فارغة'),
-  shippingAddress: z.string().min(1, 'العنوان مطلوب').optional(),
+  shippingAddress: z.string().min(1, 'العنوان مطلوب'),
   shippingCity: z.string().optional(),
   shippingCountry: z.string().optional(),
   shippingPhone: z.string().optional(),
@@ -68,6 +68,15 @@ export const orderUpdateSchema = z.object({
 export const paymentUpdateSchema = z.object({
   status: z.enum(['PENDING', 'CONFIRMED', 'REJECTED', 'REFUNDED']),
   notes: z.string().optional(),
+})
+
+export const taskCreateSchema = z.object({
+  orderId: z.string().min(1, 'معرف الطلب مطلوب'),
+  agentId: z.string().optional().nullable(),
+  type: z.enum(['PURCHASE', 'VERIFY_PRICE', 'SHIP', 'DELIVER']).optional(),
+  priority: z.enum(['LOW', 'NORMAL', 'HIGH', 'URGENT']).optional(),
+  description: z.string().optional().nullable(),
+  sourcePlatform: z.enum(['AMAZON', 'ALIBABA', 'SHEIN', 'OTHER']).optional().nullable(),
 })
 
 export const registerSchema = z.object({

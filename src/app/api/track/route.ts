@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
         trackingNumber: true,
         estimatedDelivery: true,
         createdAt: true,
+        userId: true,
         items: {
           select: {
             quantity: true,

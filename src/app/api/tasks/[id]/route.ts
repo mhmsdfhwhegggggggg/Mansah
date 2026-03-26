@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { OrderStatus } from '@prisma/client'
 import { logger } from '@/lib/logger'
 import { z } from 'zod'
 
 const taskUpdateSchema = z.object({
   status: z.enum(['PENDING', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'FAILED']).optional(),
-  result: z.union([z.string(), z.record(z.unknown())]).optional(),
+  result: z.union([z.string(), z.record(z.string(), z.unknown())]).optional(),
   purchaseConfirmation: z.string().optional(),
   trackingNumber: z.string().optional(),
   agentId: z.string().optional(),
@@ -72,21 +73,21 @@ export async function PUT(
 
     // Update order status based on task completion
     if (status === 'COMPLETED') {
-      let orderStatus = ''
-      let orderUpdate: Record<string, unknown> = {}
+      let orderStatus: OrderStatus | null = null
+      const orderUpdate: Record<string, unknown> = {}
 
       switch (task.type) {
         case 'PURCHASE':
-          orderStatus = 'PURCHASED'
+          orderStatus = OrderStatus.PURCHASED
           break
         case 'SHIP':
-          orderStatus = 'SHIPPING'
+          orderStatus = OrderStatus.SHIPPING
           if (trackingNumber) {
             orderUpdate.trackingNumber = trackingNumber
           }
           break
         case 'DELIVER':
-          orderStatus = 'DELIVERED'
+          orderStatus = OrderStatus.DELIVERED
           break
       }
 
@@ -96,7 +97,7 @@ export async function PUT(
           where: { id: task.orderId },
           data: orderUpdate,
         })
-        await prisma.orderStatus.create({
+        await prisma.orderStatusLog.create({
           data: {
             orderId: task.orderId,
             status: orderStatus,

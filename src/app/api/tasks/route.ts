@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { taskCreateSchema } from '@/lib/validations'
 import { logger } from '@/lib/logger'
 
 export async function GET(request: NextRequest) {
@@ -68,7 +69,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { orderId, agentId, type, priority, description, sourcePlatform } = body
+    const parsed = taskCreateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'بيانات غير صالحة' },
+        { status: 400 }
+      )
+    }
+    const { orderId, agentId, type, priority, description, sourcePlatform } = parsed.data
 
     const task = await prisma.task.create({
       data: {
