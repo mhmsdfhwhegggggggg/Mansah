@@ -5,50 +5,53 @@ services:
     build: .
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
-      - DATABASE_URL=postgresql://mansah:mansah_password@postgres:5432/mansah
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_URL=http://localhost:3000
-      - REDIS_URL=redis://redis:6379
       - NEXT_PUBLIC_APP_URL=http://localhost:3000
       - NEXT_PUBLIC_APP_NAME=منصة - Mansah
       - NEXT_PUBLIC_DEFAULT_CURRENCY=YER
       - NEXT_PUBLIC_COMMISSION_RATE=0.05
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     restart: unless-stopped
+    # For local development with local PostgreSQL and Redis,
+    # uncomment the following and update DATABASE_URL/REDIS_URL in .env:
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+    #   redis:
+    #     condition: service_healthy
 
-  postgres:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_USER: mansah
-      POSTGRES_PASSWORD: mansah_password
-      POSTGRES_DB: mansah
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mansah"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+  # Optional: Local PostgreSQL (use Neon for production)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   environment:
+  #     POSTGRES_USER: mansah
+  #     POSTGRES_PASSWORD: mansah_password
+  #     POSTGRES_DB: mansah
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U mansah"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
 
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+  # Optional: Local Redis (use Upstash for production)
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis_data:/data
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
 
-volumes:
-  postgres_data:
-  redis_data:
+# volumes:
+#   postgres_data:
+#   redis_data:

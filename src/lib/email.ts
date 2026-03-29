@@ -1,14 +1,8 @@
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER || '',
-    pass: process.env.SMTP_PASS || '',
-  },
-})
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null
 
 interface EmailOptions {
   to: string
@@ -19,18 +13,23 @@ interface EmailOptions {
 
 export async function sendEmail({ to, subject, html, text }: EmailOptions): Promise<boolean> {
   try {
-    if (!process.env.SMTP_USER) {
-      console.warn('SMTP not configured, skipping email send')
+    if (!resend) {
+      console.warn('Resend not configured (RESEND_API_KEY missing), skipping email send')
       return false
     }
 
-    await transporter.sendMail({
-      from: `"${process.env.APP_NAME || 'منصة Mansah'}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
-      to,
+    const { error } = await resend.emails.send({
+      from: `${process.env.NEXT_PUBLIC_APP_NAME || 'منصة Mansah'} <onboarding@resend.dev>`,
+      to: [to],
       subject,
       html,
       text: text || html.replace(/<[^>]*>/g, ''),
     })
+
+    if (error) {
+      console.error('Resend email error:', error)
+      return false
+    }
 
     return true
   } catch (error) {
@@ -43,12 +42,14 @@ export async function sendEmail({ to, subject, html, text }: EmailOptions): Prom
 export function orderStatusEmail(orderNumber: string, status: string, customerName: string): EmailOptions {
   const statusMap: Record<string, string> = {
     PENDING: 'قيد الانتظار',
-    CONFIRMED: 'تم التأكيد',
-    PROCESSING: 'قيد المعالجة',
-    SHIPPED: 'تم الشحن',
+    PAYMENT_CONFIRMED: 'تم تأكيد الدفع',
+    PURCHASING: 'جاري الشراء',
+    PURCHASED: 'تم الشراء',
+    SHIPPING: 'جاري الشحن',
+    IN_TRANSIT: 'في الطريق',
     DELIVERED: 'تم التوصيل',
-    COMPLETED: 'مكتمل',
     CANCELLED: 'ملغي',
+    REFUNDED: 'مسترجع',
   }
 
   const statusAr = statusMap[status] || status

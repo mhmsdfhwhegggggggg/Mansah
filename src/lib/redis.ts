@@ -9,12 +9,21 @@ export function getRedis(): Redis | null {
   }
 
   if (!redis) {
+    const isUpstash = process.env.REDIS_URL.includes('upstash.io')
+
     redis = new Redis(process.env.REDIS_URL, {
       maxRetriesPerRequest: 3,
       retryStrategy(times) {
         const delay = Math.min(times * 50, 2000)
         return delay
       },
+      // Upstash requires TLS - rediss:// URLs handle this automatically
+      // but we add explicit TLS config for robustness
+      ...(isUpstash ? {
+        tls: { rejectUnauthorized: false },
+        enableReadyCheck: false,
+        lazyConnect: true,
+      } : {}),
     })
 
     redis.on('error', (err) => {
