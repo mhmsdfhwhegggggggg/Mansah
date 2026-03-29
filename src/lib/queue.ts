@@ -1,24 +1,46 @@
 import { Queue, Worker, Job } from 'bullmq'
-import { getRedis } from './redis'
 
-const connection = process.env.REDIS_URL
-  ? { host: new URL(process.env.REDIS_URL).hostname, port: parseInt(new URL(process.env.REDIS_URL).port || '6379') }
-  : undefined
+function getConnection() {
+  if (!process.env.REDIS_URL) return undefined
+
+  try {
+    const url = new URL(process.env.REDIS_URL)
+    const isUpstash = url.hostname.includes('upstash.io')
+    const useTls = process.env.REDIS_URL.startsWith('rediss://') || isUpstash
+
+    return {
+      host: url.hostname,
+      port: parseInt(url.port || '6379'),
+      password: url.password || undefined,
+      username: url.username || undefined,
+      ...(useTls ? { tls: { rejectUnauthorized: false } } : {}),
+      maxRetriesPerRequest: null,
+      enableReadyCheck: false,
+    }
+  } catch {
+    console.warn('Invalid REDIS_URL, queues disabled')
+    return undefined
+  }
+}
+
+const connection = getConnection()
 
 // Order processing queue
-export const orderQueue = connection
-  ? new Queue('order-processing', { connection })
-  : null
+let orderQueue: Queue | null = null
+let emailQueue: Queue | null = null
+let notificationQueue: Queue | null = null
 
-// Email queue
-export const emailQueue = connection
-  ? new Queue('email-sending', { connection })
-  : null
+try {
+  if (connection) {
+    orderQueue = new Queue('order-processing', { connection })
+    emailQueue = new Queue('email-sending', { connection })
+    notificationQueue = new Queue('notifications', { connection })
+  }
+} catch (error) {
+  console.warn('Failed to initialize BullMQ queues:', error)
+}
 
-// Notification queue
-export const notificationQueue = connection
-  ? new Queue('notifications', { connection })
-  : null
+export { orderQueue, emailQueue, notificationQueue }
 
 // Add job to order queue
 export async function addOrderJob(
