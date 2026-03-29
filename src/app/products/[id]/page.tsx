@@ -105,7 +105,7 @@ export default function ProductDetailPage() {
           {/* Images */}
           <div>
             <div className="card overflow-hidden mb-4">
-              <div className="aspect-square bg-gray-100">
+              <div className="aspect-square bg-gray-100 relative">
                 {images[selectedImage] ? (
                   <Image src={images[selectedImage]} alt={product.titleAr || product.title} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 50vw" />
                 ) : (
@@ -121,7 +121,7 @@ export default function ProductDetailPage() {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`w-20 h-20 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all ${
+                    className={`w-20 h-20 rounded-xl overflow-hidden border-2 flex-shrink-0 transition-all relative ${
                       selectedImage === index ? 'border-primary-600 shadow-lg' : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
