@@ -1,0 +1,136 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import prisma from '@/lib/prisma'
+import { productCreateSchema } from '@/lib/validations'
+import { logger } from '@/lib/logger'
+
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams
+    const search = searchParams.get('search') || ''
+    const platform = searchParams.get('platform') || ''
+    const category = searchParams.get('category') || ''
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = Math.min(parseInt(searchParams.get('limit') || '12'), 100)
+    const sort = searchParams.get('sort') || 'newest'
+    const featured = searchParams.get('featured') === 'true'
+
+    const where: Record<string, unknown> = { isActive: true }
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { titleAr: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+
+    if (platform) {
+      where.sourcePlatform = platform
+    }
+
+    if (category) {
+      where.categoryId = category
+    }
+
+    if (featured) {
+      where.isFeatured = true
+    }
+
+    const orderBy: Record<string, string> = {}
+    switch (sort) {
+      case 'price_asc':
+        orderBy.price = 'asc'
+        break
+      case 'price_desc':
+        orderBy.price = 'desc'
+        break
+      case 'rating':
+        orderBy.rating = 'desc'
+        break
+      default:
+        orderBy.createdAt = 'desc'
+    }
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        include: { category: true },
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.product.count({ where }),
+    ])
+
+    return NextResponse.json({
+      products,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    })
+  } catch (error) {
+    logger.error('Products fetch error', error, 'products')
+    return NextResponse.json(
+      { error: 'حدث خطأ أثناء جلب المنتجات' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'غير مصرح' }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const parsed = productCreateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'بيانات غير صالحة' },
+        { status: 400 }
+      )
+    }
+    const {
+      title, titleAr, description, descriptionAr, price, originalPrice,
+      currency, images, sourceUrl, sourcePlatform, categoryId,
+      rating, reviewCount, specifications, shippingWeight, isFeatured
+    } = parsed.data
+
+    const product = await prisma.product.create({
+      data: {
+        title,
+        titleAr: titleAr || null,
+        description: description || null,
+        descriptionAr: descriptionAr || null,
+        price,
+        originalPrice: originalPrice || price,
+        currency: currency || 'USD',
+        images: typeof images === 'string' ? images : JSON.stringify(images || []),
+        sourceUrl,
+        sourcePlatform,
+        categoryId: categoryId || null,
+        rating: rating || null,
+        reviewCount: reviewCount || null,
+        specifications: specifications ? JSON.stringify(specifications) : null,
+        shippingWeight: shippingWeight || null,
+        isFeatured: isFeatured || false,
+      },
+      include: { category: true },
+    })
+
+    return NextResponse.json({ product }, { status: 201 })
+  } catch (error) {
+    logger.error('Product create error', error, 'products')
+    return NextResponse.json(
+      { error: 'حدث خطأ أثناء إنشاء المنتج' },
+      { status: 500 }
+    )
+  }
+}
