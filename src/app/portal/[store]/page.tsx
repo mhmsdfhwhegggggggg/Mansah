@@ -68,10 +68,10 @@ export default function StorePortal() {
       </div>
 
       {loading && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/90 z-20" style={{ top: '80px' }}>
-          <div className="w-20 h-20 border-4 border-primary-100 border-t-primary-600 rounded-full animate-spin mb-6"></div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">جاري بناء نفق SBN الآمن...</h2>
-          <p className="text-gray-500 font-medium animate-pulse">يتم الآن تجهيز موقع {storeKey.toUpperCase()} كاملاً لك</p>
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/95 z-20" style={{ top: '80px' }}>
+          <div className="w-20 h-20 border-4 border-primary-100 border-t-primary-600 rounded-full animate-spin mb-6 shadow-lg"></div>
+          <h2 className="text-2xl font-black text-gray-800 mb-3 tracking-wide">جاري تجهيز المتجر العالمي لك... 🌍</h2>
+          <p className="text-primary-600 font-medium animate-pulse text-lg">لحظات ونأخذك للتسوق المباشر من متجر {storeKey.toUpperCase()}</p>
         </div>
       )}
 
