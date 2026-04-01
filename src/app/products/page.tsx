@@ -10,10 +10,10 @@ import { Search, SlidersHorizontal, Star, ChevronDown, Package } from 'lucide-re
 import { ProductType } from '@/types'
 
 const platformFilters = [
-  { key: '', label: 'الكل' },
-  { key: 'AMAZON', label: 'أمازون' },
-  { key: 'ALIBABA', label: 'علي إكسبريس' },
-  { key: 'SHEIN', label: 'شي إن' },
+  { key: '', label: 'السوق المحلي (الكل)' },
+  { key: 'AMAZON', label: 'أمازون المباشر', portalUrl: '/portal/amazon' },
+  { key: 'ALIBABA', label: 'علي إكسبريس', portalUrl: '/portal/aliexpress' },
+  { key: 'SHEIN', label: 'شي إن المباشر', portalUrl: '/portal/shein' },
 ]
 
 const sortOptions = [
@@ -22,6 +22,8 @@ const sortOptions = [
   { key: 'price_desc', label: 'السعر: الأعلى أولاً' },
   { key: 'rating', label: 'التقييم' },
 ]
+
+import { useRouter } from 'next/navigation'
 
 export default function ProductsPage() {
   return (
@@ -32,6 +34,7 @@ export default function ProductsPage() {
 }
 
 function ProductsContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [products, setProducts] = useState<ProductType[]>([])
   const [loading, setLoading] = useState(true)
@@ -137,14 +140,22 @@ function ProductsContent() {
               {platformFilters.map((f) => (
                 <button
                   key={f.key}
-                  onClick={() => { setPlatform(f.key); setPage(1) }}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  onClick={() => {
+                    if (f.portalUrl) {
+                      router.push(f.portalUrl)
+                    } else {
+                      setPlatform(f.key)
+                      setPage(1)
+                    }
+                  }}
+                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
                     platform === f.key
                       ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/25'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : f.portalUrl ? 'bg-orange-100 text-orange-700 hover:bg-orange-200 border border-orange-200' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
                   {f.label}
+                  {f.portalUrl && ' 🚀'}
                 </button>
               ))}
             </div>

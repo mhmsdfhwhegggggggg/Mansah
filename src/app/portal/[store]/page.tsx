@@ -26,9 +26,8 @@ export default function StorePortal() {
       // When the user clicks the floating button inside the injected Shein HTML
       if (event.data && event.data.type === 'SBN_CHECKOUT') {
         const productUrl = event.data.url
-        // Send them to our own custom product scraper link or search!
-        // For now, we redirect them to products page with the url acting as search query so our scraper picks it up
-        router.push(`/products?search=${encodeURIComponent(productUrl)}`)
+        // Send them directly to the Product Detail scraper page so they can Add to Cart
+        router.push(`/products/scrape_new?url=${encodeURIComponent(productUrl)}`)
       }
     }
     window.addEventListener('message', handleMessage)
