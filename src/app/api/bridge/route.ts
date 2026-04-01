@@ -86,6 +86,8 @@ export async function GET(request: Request) {
       headers.delete('x-frame-options');
       headers.delete('content-security-policy');
       headers.delete('strict-transport-security');
+      headers.delete('content-encoding');
+      headers.delete('content-length');
       headers.set('Access-Control-Allow-Origin', '*');
 
       return new NextResponse(html, {
