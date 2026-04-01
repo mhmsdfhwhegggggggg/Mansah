@@ -28,6 +28,7 @@ export async function GET(request: Request) {
     if (contentType.includes('text/html')) {
       let html = await res.text();
       const targetOrigin = new URL(targetUrl).origin;
+      const sbnOrigin = new URL(request.url).origin;
 
       // The Magic Injector
       const injection = `
@@ -72,7 +73,7 @@ export async function GET(request: Request) {
              if (a && a.href && !a.href.startsWith('javascript:') && !a.href.startsWith('#')) {
                e.preventDefault();
                const nextUrl = new URL(a.getAttribute('href'), '${targetOrigin}').href;
-               window.location.href = '/api/bridge?url=' + encodeURIComponent(nextUrl);
+               window.location.href = '${sbnOrigin}/api/bridge?url=' + encodeURIComponent(nextUrl);
              }
            });
          });
