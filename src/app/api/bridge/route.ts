@@ -76,6 +76,19 @@ export async function GET(request: Request) {
                window.location.href = '${sbnOrigin}/api/bridge?url=' + encodeURIComponent(nextUrl);
              }
            });
+
+           // 3. Silently KILL Shein CORS Timeout Modals
+           setInterval(() => {
+             const elements = document.querySelectorAll('div, span, p');
+             elements.forEach(el => {
+               const text = el.textContent || '';
+               if (text.includes('Access timed out') || text.includes('تحديث الصفحة') || text.includes('timed out')) {
+                 const container = el.closest('div[class*="dialog"], div[class*="modal"], div[style*="fixed"]');
+                 if (container) container.style.display = 'none';
+                 el.style.display = 'none';
+               }
+             });
+           }, 1000);
          });
        </script>
       `;
