@@ -56,12 +56,6 @@ const nextConfig = {
             value: 'max-age=31536000; includeSubDomains',
           },
           {
-            key: 'Content-Security-Policy',
-            value: process.env.NODE_ENV === 'development'
-              ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https: ws: wss:; frame-ancestors 'self';"
-              : "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'self';",
-          },
-          {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
