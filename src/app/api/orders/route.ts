@@ -92,7 +92,27 @@ export async function POST(request: NextRequest) {
     const orderItems = []
 
     for (const item of items) {
-      const product = await prisma.product.findUnique({ where: { id: item.productId } })
+      let product = await prisma.product.findUnique({ where: { id: item.productId } })
+      
+      // If it's a freshly scraped product, save it to DB on the fly!
+      if (!product && item.productId.startsWith('scrape_') && item.scrapedProduct) {
+         product = await prisma.product.create({
+            data: {
+               title: item.scrapedProduct.title,
+               titleAr: item.scrapedProduct.titleAr,
+               price: item.scrapedProduct.price,
+               originalPrice: item.scrapedProduct.originalPrice || item.scrapedProduct.price,
+               currency: 'USD',
+               images: JSON.stringify([item.scrapedProduct.image]),
+               sourcePlatform: item.scrapedProduct.sourcePlatform as any,
+               sourceUrl: item.scrapedProduct.sourceUrl,
+               isActive: true,
+            }
+         })
+         // Update item's productId to the newly generated DB ID
+         item.productId = product.id
+      }
+
       if (!product || !product.isActive) {
         return NextResponse.json(
           { error: `المنتج ${item.productId} غير متوفر` },

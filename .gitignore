@@ -40,3 +40,6 @@ prisma/*.db-journal
 # uploads
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+.vercel
+.env*.local

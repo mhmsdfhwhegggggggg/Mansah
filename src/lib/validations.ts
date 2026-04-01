@@ -44,6 +44,15 @@ export const orderCreateSchema = z.object({
   items: z.array(z.object({
     productId: z.string().min(1),
     quantity: z.number().int().positive(),
+    scrapedProduct: z.object({
+      title: z.string(),
+      titleAr: z.string().optional(),
+      price: z.number(),
+      originalPrice: z.number().optional(),
+      image: z.string(),
+      sourcePlatform: z.enum(['AMAZON', 'ALIBABA', 'SHEIN', 'OTHER']),
+      sourceUrl: z.string(),
+    }).optional()
   })).min(1, 'السلة فارغة'),
   shippingAddress: z.string().min(1, 'العنوان مطلوب'),
   shippingCity: z.string().optional(),

@@ -90,6 +90,15 @@ export default function CheckoutPage() {
           items: items.map((item) => ({
             productId: item.productId,
             quantity: item.quantity,
+            scrapedProduct: item.productId.startsWith('scrape_') ? {
+              title: item.title,
+              titleAr: item.titleAr,
+              price: item.price,
+              originalPrice: item.originalPrice,
+              image: item.image,
+              sourcePlatform: item.sourcePlatform,
+              sourceUrl: item.sourceUrl,
+            } : undefined
           })),
           shippingAddress: shipping.address,
           shippingCity: shipping.city,

@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '12'), 100)
     const sort = searchParams.get('sort') || 'newest'
     const featured = searchParams.get('featured') === 'true'
+    const minPrice = searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')!) : undefined
+    const maxPrice = searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : undefined
 
     const where: Record<string, unknown> = { isActive: true }
 
@@ -36,6 +38,12 @@ export async function GET(request: NextRequest) {
 
     if (featured) {
       where.isFeatured = true
+    }
+
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      where.price = {}
+      if (minPrice !== undefined) (where.price as any).gte = minPrice
+      if (maxPrice !== undefined) (where.price as any).lte = maxPrice
     }
 
     const orderBy: Record<string, string> = {}

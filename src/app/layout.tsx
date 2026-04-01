@@ -4,7 +4,7 @@ import { Providers } from '@/components/layout/Providers'
 import { Toaster } from 'react-hot-toast'
 
 export const metadata: Metadata = {
-  title: 'منصة - Mansah | تسوق عالمي بدفع محلي',
+  title: 'SBN | تسوق عالمي بدفع محلي',
   description: 'منصة وساطة إلكترونية تمكنك من التسوق من أمازون وعلي إكسبريس وشي إن بطرق دفع محلية وشحن مباشر إلى بابك',
   keywords: 'تسوق, أمازون, علي إكسبريس, شي إن, وساطة, شراء دولي, يمن, سعودية',
 }
@@ -24,7 +24,7 @@ export default function RootLayout({
             toastOptions={{
               duration: 4000,
               style: {
-                fontFamily: 'Tajawal, sans-serif',
+                fontFamily: 'Cairo, sans-serif',
                 direction: 'rtl',
               },
             }}

@@ -54,7 +54,7 @@ export default function HomePage() {
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-sm mb-8 backdrop-blur-sm">
               <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              المنصة جاهزة للاستخدام
+              SBN جاهزة للاستخدام
             </div>
 
             <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight">
@@ -64,7 +64,7 @@ export default function HomePage() {
             </h1>
 
             <p className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto leading-relaxed">
-              منصة وساطة إلكترونية تمكنك من شراء أي منتج من أمازون وعلي إكسبريس وشي إن
+              SBN منصة وساطة إلكترونية تمكنك من شراء أي منتج من أمازون وعلي إكسبريس وشي إن
               بطرق دفع محلية وتوصيل مباشر إلى بابك
             </p>
 
@@ -93,7 +93,7 @@ export default function HomePage() {
             {platforms.map((platform) => (
               <Link
                 key={platform.key}
-                href={`/products?platform=${platform.key}`}
+                href={`/portal/${platform.name.toLowerCase()}`}
                 className="group card p-8 text-center hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
               >
                 <div className={`w-20 h-20 mx-auto mb-4 bg-gradient-to-br ${platform.color} rounded-2xl flex items-center justify-center text-4xl shadow-lg group-hover:scale-110 transition-transform`}>
@@ -101,8 +101,8 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-xl font-bold text-gray-800 mb-2">{platform.nameAr}</h3>
                 <p className="text-gray-500 text-sm">{platform.name}</p>
-                <div className="mt-4 flex items-center justify-center text-primary-600 font-medium text-sm group-hover:gap-2 transition-all">
-                  تصفح المنتجات
+                <div className="mt-4 flex items-center justify-center text-primary-600 font-bold text-sm group-hover:gap-2 transition-all">
+                  الدخول للبوابة المباشرة 🚀
                   <ChevronLeft size={16} />
                 </div>
               </Link>
@@ -115,7 +115,7 @@ export default function HomePage() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-800 mb-3">كيف تعمل المنصة؟</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-3">كيف تعمل SBN؟</h2>
             <p className="text-gray-500">أربع خطوات بسيطة للتسوق من العالم</p>
           </div>
 
@@ -155,7 +155,7 @@ export default function HomePage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredProducts.map((product) => {
-                const images = JSON.parse(product.images || '[]')
+                const images = typeof product.images === 'string' ? JSON.parse(product.images || '[]') : (Array.isArray(product.images) ? product.images : [])
                 return (
                   <Link key={product.id} href={`/products/${product.id}`} className="group card hover:shadow-xl transition-all duration-300">
                     <div className="aspect-square bg-gray-100 relative overflow-hidden">
@@ -210,7 +210,7 @@ export default function HomePage() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-gray-800 mb-3">لماذا تختار منصة؟</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-3">لماذا تختار SBN؟</h2>
             <p className="text-gray-500">نوفر لك تجربة تسوق عالمية بجودة ومصداقية</p>
           </div>
 

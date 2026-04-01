@@ -38,29 +38,58 @@ function ProductsContent() {
   const [search, setSearch] = useState(searchParams.get('search') || '')
   const [platform, setPlatform] = useState(searchParams.get('platform') || '')
   const [sort, setSort] = useState('newest')
+  const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '')
+  const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
 
   const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
+      // 1. Fetch Local products
       const params = new URLSearchParams()
       if (search) params.set('search', search)
       if (platform) params.set('platform', platform)
+      if (minPrice) params.set('minPrice', minPrice)
+      if (maxPrice) params.set('maxPrice', maxPrice)
       params.set('sort', sort)
       params.set('page', page.toString())
       params.set('limit', '12')
 
-      const res = await fetch(`/api/products?${params.toString()}`)
-      const data = await res.json()
-      setProducts(data.products || [])
-      setTotalPages(data.pagination?.totalPages || 1)
+      const resDbPromise = fetch(`/api/products?${params.toString()}`).then(r => r.json())
+
+      // 2. Fetch Live Scraped products (to show the real market!)
+      let scrapeQuery = search || ''
+      // Provide a generic lively word if search is empty to simulate live category
+      if (!scrapeQuery) {
+          if (platform === 'AMAZON') scrapeQuery = 'trending'
+          else if (platform === 'SHEIN') scrapeQuery = 'fashion'
+          else scrapeQuery = 'electronics'
+      }
+      
+      const scrapeParams = new URLSearchParams()
+      scrapeParams.set('q', scrapeQuery)
+      if (platform) scrapeParams.set('platform', platform)
+      if (minPrice) scrapeParams.set('minPrice', minPrice)
+      if (maxPrice) scrapeParams.set('maxPrice', maxPrice)
+
+      const resScrapePromise = fetch(`/api/scrape/search?${scrapeParams.toString()}`).then(r => r.json())
+
+      // Await both, gracefully falling back to empty arrays on failure
+      const [dbData, scrapeData] = await Promise.all([resDbPromise, resScrapePromise].map(p => p.catch(() => ({ products: [] }))))
+
+      // Add a random sort to visually mix live data with static data
+      const mergedProducts = [...(dbData.products || []), ...(scrapeData.products || [])]
+        .sort((a,b) => sort === 'newest' ? Math.random() - 0.5 : 0) 
+
+      setProducts(mergedProducts)
+      setTotalPages(dbData.pagination?.totalPages || 1)
     } catch {
       setProducts([])
     } finally {
       setLoading(false)
     }
-  }, [search, platform, sort, page])
+  }, [search, platform, sort, page, minPrice, maxPrice])
 
   useEffect(() => {
     fetchProducts()
@@ -120,6 +149,28 @@ function ProductsContent() {
               ))}
             </div>
 
+            {/* Price Filter */}
+            <div className="flex items-center gap-2 border-r border-gray-200 pr-4 ml-4">
+              <span className="text-sm font-medium text-gray-500 whitespace-nowrap">السعر:</span>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="number"
+                  placeholder="من"
+                  value={minPrice}
+                  onChange={(e) => { setMinPrice(e.target.value); setPage(1) }}
+                  className="w-20 px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                />
+                <span className="text-gray-400">-</span>
+                <input
+                  type="number"
+                  placeholder="إلى"
+                  value={maxPrice}
+                  onChange={(e) => { setMaxPrice(e.target.value); setPage(1) }}
+                  className="w-20 px-2 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                />
+              </div>
+            </div>
+
             {/* Sort */}
             <div className="relative">
               <select
@@ -160,9 +211,9 @@ function ProductsContent() {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {products.map((product) => {
-                const images = JSON.parse(product.images || '[]')
+                const images = typeof product.images === 'string' ? JSON.parse(product.images || '[]') : (Array.isArray(product.images) ? product.images : [])
                 return (
-                  <Link key={product.id} href={`/products/${product.id}`} className="group card hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  <Link key={product.id} href={`/products/${product.id}${product.id.startsWith('scrape_') ? `?url=${encodeURIComponent(product.sourceUrl)}` : ''}`} className="group card hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                     <div className="aspect-square bg-gray-100 relative overflow-hidden">
                       {images[0] ? (
                         <Image src={images[0]} alt={product.titleAr || product.title} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" />

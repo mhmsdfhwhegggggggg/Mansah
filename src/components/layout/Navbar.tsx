@@ -49,9 +49,9 @@ export default function Navbar() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-lg">م</span>
+              <span className="text-white font-bold text-lg">S</span>
             </div>
-            <span className="text-xl font-bold text-gray-800">منصة</span>
+            <span className="text-xl font-bold text-gray-800">SBN</span>
           </Link>
 
           {/* Search Bar */}

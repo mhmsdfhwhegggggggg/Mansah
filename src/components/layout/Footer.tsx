@@ -10,9 +10,9 @@ export default function Footer() {
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">م</span>
+                <span className="text-white font-bold text-lg">S</span>
               </div>
-              <span className="text-xl font-bold text-white">منصة</span>
+              <span className="text-xl font-bold text-white">SBN</span>
             </div>
             <p className="text-sm leading-relaxed">
               منصة وساطة إلكترونية تمكنك من التسوق من أكبر المتاجر العالمية بطرق دفع محلية وشحن مباشر إلى بابك.
@@ -26,7 +26,7 @@ export default function Footer() {
               <li><Link href="/products" className="hover:text-primary-400 transition-colors text-sm">المنتجات</Link></li>
               <li><Link href="/products?platform=AMAZON" className="hover:text-primary-400 transition-colors text-sm">أمازون</Link></li>
               <li><Link href="/products?platform=SHEIN" className="hover:text-primary-400 transition-colors text-sm">شي إن</Link></li>
-              <li><Link href="/products?platform=ALIBABA" className="hover:text-primary-400 transition-colors text-sm">علي إكسبريس</Link></li>
+              <li><Link href="/products?platform=ALIEXPRESS" className="hover:text-primary-400 transition-colors text-sm">علي إكسبريس</Link></li>
               <li><Link href="/track" className="hover:text-primary-400 transition-colors text-sm">تتبع الطلب</Link></li>
             </ul>
           </div>
@@ -47,9 +47,9 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-bold mb-4">تواصل معنا</h4>
             <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-sm">
-                <Mail size={14} className="text-primary-400" />
-                <span>support@mansah.com</span>
+              <li className="flex items-center gap-3 text-gray-400" style={{ fontFamily: 'Almarai, sans-serif' }}>
+                <Mail size={18} />
+                <span dir="ltr">support@sbn.com</span>
               </li>
               <li className="flex items-center gap-2 text-sm">
                 <Phone size={14} className="text-primary-400" />
@@ -64,8 +64,8 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-gray-500">
-            © {new Date().getFullYear()} منصة - Mansah. جميع الحقوق محفوظة.
+          <p className="text-gray-400 text-sm">
+            © {new Date().getFullYear()} SBN. جميع الحقوق محفوظة.
           </p>
           <div className="flex items-center gap-2 text-sm text-gray-500">
             <Package size={14} />

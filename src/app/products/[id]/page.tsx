@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import Navbar from '@/components/layout/Navbar'
@@ -13,6 +13,7 @@ import toast from 'react-hot-toast'
 
 export default function ProductDetailPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const [product, setProduct] = useState<ProductType | null>(null)
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
@@ -22,9 +23,18 @@ export default function ProductDetailPage() {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`/api/products/${params.id}`)
-        const data = await res.json()
-        setProduct(data.product)
+        const id = Array.isArray(params.id) ? params.id[0] : params.id
+        if (id && id.startsWith('scrape_')) {
+          const url = searchParams.get('url')
+          if (!url) throw new Error('رابط المنتج مفقود')
+          const res = await fetch(`/api/scrape/product?url=${encodeURIComponent(url)}`)
+          const data = await res.json()
+          setProduct(data.product)
+        } else {
+          const res = await fetch(`/api/products/${params.id}`)
+          const data = await res.json()
+          setProduct(data.product)
+        }
       } catch {
         setProduct(null)
       } finally {
@@ -32,7 +42,7 @@ export default function ProductDetailPage() {
       }
     }
     fetchProduct()
-  }, [params.id])
+  }, [params.id, searchParams])
 
   const handleAddToCart = () => {
     if (!product) return
