@@ -30,6 +30,11 @@ export async function GET(request: Request) {
       const targetOrigin = new URL(targetUrl).origin;
       const sbnOrigin = new URL(request.url).origin;
 
+      // Force lazy-loaded elements to render instantly without needing external JS
+      html = html.replace(/data-src="/g, 'src="');
+      html = html.replace(/v-lazy="/g, 'src="');
+      html = html.replace(/data-original="/g, 'src="');
+
       // The Magic Injector
       const injection = `
        <base href="${targetOrigin}/">
@@ -57,7 +62,7 @@ export async function GET(request: Request) {
        </style>
        <script>
          document.addEventListener('DOMContentLoaded', () => {
-           // 1. Inject SBN Fast-Checkout Button
+           // 2. Add SBN Button
            const btn = document.createElement('div');
            btn.id = 'sbn-floating-btn';
            btn.innerText = '🛒 اشترِ الآن عبر SBN';
@@ -67,13 +72,32 @@ export async function GET(request: Request) {
            };
            document.body.appendChild(btn);
 
-           // 2. Intercept Navigation to keep them inside SBN completely
+           // 3. Hijack React Router / Vue Router SPA Navigation
+           const handleProxyNav = (url) => {
+             if (url && !url.includes('javascript:') && !url.startsWith('#')) {
+               const absoluteUrl = new URL(url, '${targetOrigin}').href;
+               window.location.href = '${sbnOrigin}/api/bridge?url=' + encodeURIComponent(absoluteUrl);
+             }
+           };
+
+           const originalPush = history.pushState;
+           history.pushState = function(state, title, url) {
+             handleProxyNav(url);
+             return originalPush.apply(this, arguments);
+           };
+
+           const originalReplace = history.replaceState;
+           history.replaceState = function(state, title, url) {
+             handleProxyNav(url);
+             return originalReplace.apply(this, arguments);
+           };
+
+           // 4. Fallback: Intercept basic <a> clicks
            document.body.addEventListener('click', (e) => {
              const a = e.target.closest('a');
-             if (a && a.href && !a.href.startsWith('javascript:') && !a.href.startsWith('#')) {
+             if (a && a.href) {
                e.preventDefault();
-               const nextUrl = new URL(a.getAttribute('href'), '${targetOrigin}').href;
-               window.location.href = '${sbnOrigin}/api/bridge?url=' + encodeURIComponent(nextUrl);
+               handleProxyNav(a.getAttribute('href'));
              }
            });
 
@@ -89,6 +113,38 @@ export async function GET(request: Request) {
                }
              });
            }, 1000);
+
+           // 5. Monkey Patch XHR and Fetch to bypass CORS using corsproxy.io
+           const CORS_PROXY = 'https://corsproxy.io/?url=';
+           
+           const originalFetch = window.fetch;
+           window.fetch = async function(...args) {
+             try {
+               let url = args[0];
+               // Don't proxy if it's already intercepted or local
+               if (typeof url === 'string' && !url.includes('corsproxy.io')) {
+                 const absoluteUrl = new URL(url, '${targetOrigin}').href;
+                 if (absoluteUrl.includes('shein.com')) {
+                   args[0] = CORS_PROXY + encodeURIComponent(absoluteUrl);
+                 }
+               }
+             } catch (e) {}
+             return originalFetch.apply(this, args);
+           };
+
+           const originalXHR = XMLHttpRequest.prototype.open;
+           XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+             try {
+               if (typeof url === 'string' && !url.includes('corsproxy.io')) {
+                 const absoluteUrl = new URL(url, '${targetOrigin}').href;
+                 if (absoluteUrl.includes('shein.com')) {
+                   url = CORS_PROXY + encodeURIComponent(absoluteUrl);
+                 }
+               }
+             } catch (e) {}
+             return originalXHR.call(this, method, url, ...rest);
+           };
+
          });
        </script>
       `;
