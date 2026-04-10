@@ -30,6 +30,10 @@ export async function GET(request: Request) {
       const targetOrigin = new URL(targetUrl).origin;
       const sbnOrigin = new URL(request.url).origin;
 
+      // NUKE ALL NATIVE SCRIPTS! This stops React from hydrating, failing due to CORS, and blanking the screen.
+      // It forces Shein to run as a pure, fast, server-side rendered HTML site.
+      html = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
+
       // Force lazy-loaded elements to render instantly without needing external JS
       html = html.replace(/data-src="/g, 'src="');
       html = html.replace(/v-lazy="/g, 'src="');
@@ -112,39 +116,6 @@ export async function GET(request: Request) {
                  el.style.display = 'none';
                }
              });
-           }, 1000);
-
-           // 5. Monkey Patch XHR and Fetch to bypass CORS using corsproxy.io
-           const CORS_PROXY = 'https://corsproxy.io/?url=';
-           
-           const originalFetch = window.fetch;
-           window.fetch = async function(...args) {
-             try {
-               let url = args[0];
-               // Don't proxy if it's already intercepted or local
-               if (typeof url === 'string' && !url.includes('corsproxy.io')) {
-                 const absoluteUrl = new URL(url, '${targetOrigin}').href;
-                 if (absoluteUrl.includes('shein.com')) {
-                   args[0] = CORS_PROXY + encodeURIComponent(absoluteUrl);
-                 }
-               }
-             } catch (e) {}
-             return originalFetch.apply(this, args);
-           };
-
-           const originalXHR = XMLHttpRequest.prototype.open;
-           XMLHttpRequest.prototype.open = function(method, url, ...rest) {
-             try {
-               if (typeof url === 'string' && !url.includes('corsproxy.io')) {
-                 const absoluteUrl = new URL(url, '${targetOrigin}').href;
-                 if (absoluteUrl.includes('shein.com')) {
-                   url = CORS_PROXY + encodeURIComponent(absoluteUrl);
-                 }
-               }
-             } catch (e) {}
-             return originalXHR.call(this, method, url, ...rest);
-           };
-
          });
        </script>
       `;
