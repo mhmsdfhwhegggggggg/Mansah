@@ -1,7 +1,24 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
+// We must support POST and OPTIONS if Shein attempts to POST data 
+export async function GET(request: NextRequest) {
+  return handleProxy(request);
+}
+
+export async function POST(request: NextRequest) {
+  return handleProxy(request);
+}
+
+export async function OPTIONS(request: NextRequest) {
+  const headers = new Headers();
+  headers.set('Access-Control-Allow-Origin', '*');
+  headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  headers.set('Access-Control-Allow-Headers', '*');
+  return new NextResponse('OK', { status: 200, headers });
+}
+
+async function handleProxy(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams;
   let targetUrl = searchParams.get('url');
 
   if (!targetUrl) {
@@ -14,32 +31,52 @@ export async function GET(request: Request) {
   }
 
   try {
+    const sbnOrigin = request.nextUrl.origin;
+    const targetOrigin = new URL(targetUrl).origin;
+
+    // Optional: Extract body if POST
+    let body = undefined;
+    if (request.method === 'POST') {
+      body = await request.text();
+    }
+
     const res = await fetch(targetUrl, {
+      method: request.method === 'OPTIONS' ? 'GET' : request.method,
+      body: body || undefined,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept': 'text/html,application/json,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'Accept-Language': 'ar,en-US;q=0.7,en;q=0.3',
       },
     });
 
-    const contentType = res.headers.get('content-type') || '';
-    
-    // Only rewrite HTML
+    // Strip upstream blocking headers globally!
+    const headers = new Headers(res.headers);
+    headers.delete('x-frame-options');
+    headers.delete('content-security-policy');
+    headers.delete('strict-transport-security');
+    headers.delete('access-control-allow-origin');
+    headers.delete('access-control-allow-methods');
+    headers.delete('access-control-allow-credentials');
+    headers.delete('content-encoding');
+    headers.delete('content-length');
+
+    // Force allow CORS globally for OUR iframe and scripts
+    headers.set('Access-Control-Allow-Origin', '*');
+    headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    headers.set('Access-Control-Allow-Headers', '*');
+
+    const contentType = headers.get('content-type') || '';
+
+    // If it's HTML, we inject our stealth bridge logic
     if (contentType.includes('text/html')) {
       let html = await res.text();
-      const targetOrigin = new URL(targetUrl).origin;
-      const sbnOrigin = new URL(request.url).origin;
 
-      // NUKE ALL NATIVE SCRIPTS! This stops React from hydrating, failing due to CORS, and blanking the screen.
-      // It forces Shein to run as a pure, fast, server-side rendered HTML site.
-      html = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
-
-      // Force lazy-loaded elements to render instantly without needing external JS
+      // Ensure Lazy Loaders default to actual images
       html = html.replace(/data-src="/g, 'src="');
       html = html.replace(/v-lazy="/g, 'src="');
       html = html.replace(/data-original="/g, 'src="');
 
-      // The Magic Injector
       const injection = `
        <base href="${targetOrigin}/">
        <style>
@@ -56,7 +93,7 @@ export async function GET(request: Request) {
            font-family: inherit;
            font-size: 18px;
            box-shadow: 0 10px 30px rgba(234, 88, 12, 0.5);
-           z-index: 2147483647; /* absolute max */
+           z-index: 2147483647;
            cursor: pointer;
            border: 3px solid white;
            text-align: center;
@@ -66,15 +103,27 @@ export async function GET(request: Request) {
        </style>
        <script>
          document.addEventListener('DOMContentLoaded', () => {
-           // 2. Add SBN Button
+           // 1. Add SBN Floating Checkout Button
            const btn = document.createElement('div');
            btn.id = 'sbn-floating-btn';
            btn.innerText = '🛒 اشترِ الآن عبر SBN';
            btn.onclick = () => {
-             // Notify the parent SBN platform with the current URL
+             // We drop the iframe and send the exact URL to the parent window Checkout flow
              window.parent.postMessage({ type: 'SBN_CHECKOUT', url: window.location.href || '${targetUrl}' }, '*');
            };
            document.body.appendChild(btn);
+
+           // 2. Hide Annoying Timeout Modals
+           setInterval(() => {
+             document.querySelectorAll('div, span, p').forEach(el => {
+               const text = el.textContent || '';
+               if (text.includes('Access timed out') || text.includes('تحديث الصفحة') || text.includes('timed out')) {
+                 const container = el.closest('div[class*="dialog"], div[class*="modal"]');
+                 if (container) container.style.display = 'none';
+                 el.style.display = 'none';
+               }
+             });
+           }, 1500);
 
            // 3. Hijack React Router / Vue Router SPA Navigation
            const handleProxyNav = (url) => {
@@ -96,7 +145,7 @@ export async function GET(request: Request) {
              return originalReplace.apply(this, arguments);
            };
 
-           // 4. Fallback: Intercept basic <a> clicks
+           // 4. Fallback Intercept <a> clicks
            document.body.addEventListener('click', (e) => {
              const a = e.target.closest('a');
              if (a && a.href) {
@@ -105,31 +154,45 @@ export async function GET(request: Request) {
              }
            });
 
-           // 3. Silently KILL Shein CORS Timeout Modals
-           setInterval(() => {
-             const elements = document.querySelectorAll('div, span, p');
-             elements.forEach(el => {
-               const text = el.textContent || '';
-               if (text.includes('Access timed out') || text.includes('تحديث الصفحة') || text.includes('timed out')) {
-                 const container = el.closest('div[class*="dialog"], div[class*="modal"], div[style*="fixed"]');
-                 if (container) container.style.display = 'none';
-                 el.style.display = 'none';
+           // 5. Native Fetch/XHR Interceptor to route internal APIs through SBN
+           const SBN_PROXY = '${sbnOrigin}/api/bridge?url=';
+           
+           const originalFetch = window.fetch;
+           window.fetch = async function(...args) {
+             try {
+               let url = args[0];
+               if (typeof url === 'string' && !url.includes('/api/bridge')) {
+                 const absoluteUrl = new URL(url, '${targetOrigin}').href;
+                 if (absoluteUrl.includes('shein.com')) {
+                   args[0] = SBN_PROXY + encodeURIComponent(absoluteUrl);
+                 }
+               } else if (url instanceof Request) {
+                 const absoluteUrl = new URL(url.url, '${targetOrigin}').href;
+                 if (absoluteUrl.includes('shein.com')) {
+                   args[0] = new Request(SBN_PROXY + encodeURIComponent(absoluteUrl), url);
+                 }
                }
-             });
+             } catch (e) {}
+             return originalFetch.apply(this, args);
+           };
+
+           const originalXHR = XMLHttpRequest.prototype.open;
+           XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+             try {
+               if (typeof url === 'string' && !url.includes('/api/bridge')) {
+                 const absoluteUrl = new URL(url, '${targetOrigin}').href;
+                 if (absoluteUrl.includes('shein.com')) {
+                   url = SBN_PROXY + encodeURIComponent(absoluteUrl);
+                 }
+               }
+             } catch (e) {}
+             return originalXHR.call(this, method, url, ...rest);
+           };
          });
        </script>
       `;
       
       html = html.replace('<head>', '<head>' + injection);
-
-      const headers = new Headers(res.headers);
-      // Strip Blocking Headers
-      headers.delete('x-frame-options');
-      headers.delete('content-security-policy');
-      headers.delete('strict-transport-security');
-      headers.delete('content-encoding');
-      headers.delete('content-length');
-      headers.set('Access-Control-Allow-Origin', '*');
 
       return new NextResponse(html, {
         status: res.status,
@@ -137,14 +200,14 @@ export async function GET(request: Request) {
       });
     }
 
-    // Pass non-HTML assets directly (if they accidentally hit this proxy)
+    // Pass JSON, Images, and other assets directly with the open CORS headers
     const arrayBuffer = await res.arrayBuffer();
     return new NextResponse(arrayBuffer, {
       status: res.status,
-      headers: res.headers,
+      headers: headers,
     });
     
   } catch (error) {
-    return new NextResponse('SBN Bridge Failed Context', { status: 500 });
+    return new NextResponse('SBN Bridge Failed', { status: 500 });
   }
 }
